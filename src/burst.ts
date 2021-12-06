@@ -1,42 +1,40 @@
-import h from './h';
-import Timeline from 'tween/timeline';
-import ShapeSwirl from './shape-swirl';
-import Tunable from './tunable';
-
+import h from './h'
+import ShapeSwirl from './shape-swirl'
+import Tunable from './tunable'
+import Timeline from './tween/timeline'
 
 class ChildSwirl extends ShapeSwirl {
   _declareDefaults() {
-    super._declareDefaults();
-    this._defaults.isSwirl = false;
-    this._o.duration = (this._o.duration != null)
-      ? this._o.duration : 700;
+    super._declareDefaults()
+    this._defaults.isSwirl = false
+    this._o.duration = this._o.duration != null ? this._o.duration : 700
   }
 
   // disable degreeShift calculations
   _calcSwirlXY(proc) {
-    const degreeShift = this._props.degreeShift;
+    const degreeShift = this._props.degreeShift
 
-    this._props.degreeShift = 0;
-    super._calcSwirlXY(proc);
-    this._props.degreeShift = degreeShift;
+    this._props.degreeShift = 0
+    super._calcSwirlXY(proc)
+    this._props.degreeShift = degreeShift
   }
 }
 
 class MainSwirl extends ChildSwirl {
   _declareDefaults() {
-    super._declareDefaults();
-    this._defaults.scale = 1;
-    this._defaults.width = 0;
-    this._defaults.height = 0;
-    this._defaults.radius = { 25: 75 };
+    super._declareDefaults()
+    this._defaults.scale = 1
+    this._defaults.width = 0
+    this._defaults.height = 0
+    this._defaults.radius = { 25: 75 }
 
     // this._defaults.duration = 2000;
   }
 }
 
 class Burst extends Tunable {
-  static ChildSwirl = ChildSwirl;
-  static MainSwirl = MainSwirl;
+  static ChildSwirl = ChildSwirl
+  static MainSwirl = MainSwirl
 
   _timelineOptions
   masterSwirl: ShapeSwirl
@@ -49,7 +47,6 @@ class Burst extends Tunable {
   */
   _declareDefaults() {
     this._defaults = {
-
       /* [number > 0] :: Quantity of Burst particles. */
       count: 5,
 
@@ -69,8 +66,8 @@ class Burst extends Tunable {
       width: 0,
 
       /* [number >= 0] :: height of the main swirl. */
-      height: 0,
-    };
+      height: 0
+    }
   }
 
   /*
@@ -81,19 +78,17 @@ class Burst extends Tunable {
     @returns  {object} this.
   */
   then(o) {
-
     // remove tween properties (not callbacks)
-    this._removeTweenProperties(o);
+    this._removeTweenProperties(o)
 
     const newMaster = this._masterThen(o)
     const newSwirls = this._childThen(o)
 
-    this._setSwirlDuration(newMaster, this._calcPackTime(newSwirls));
+    this._setSwirlDuration(newMaster, this._calcPackTime(newSwirls))
 
-    (this.timeline as Timeline)._recalcTotalDuration();
-    return this;
+    ;(this.timeline as Timeline)._recalcTotalDuration()
+    return this
   }
-
 
   /*
     Method to start the animation with optional new options.
@@ -102,31 +97,33 @@ class Burst extends Tunable {
     @returns {object} this.
   */
   tune(o) {
-    if (o == null) { return this; }
+    if (o == null) {
+      return this
+    }
 
     // save timeline options to _timelineOptions
     // and delete the timeline options on o
     // cuz masterSwirl should not get them
-    this._saveTimelineOptions(o);
+    this._saveTimelineOptions(o)
 
     // add new timeline properties to timeline
-    this.timeline._setProp(this._timelineOptions);
+    this.timeline._setProp(this._timelineOptions)
 
     // remove tween options (not callbacks)
-    this._removeTweenProperties(o);
+    this._removeTweenProperties(o)
 
     // tune _props
-    this._tuneNewOptions(o);
+    this._tuneNewOptions(o)
 
     // tune master swirl
-    this.masterSwirl.tune(o);
+    this.masterSwirl.tune(o)
 
     // tune child swirls
-    this._tuneSwirls(o);
+    this._tuneSwirls(o)
 
     // recalc time for modules
-    this._recalcModulesTime();
-    return this;
+    this._recalcModulesTime()
+    return this
   }
 
   // ^ PUBLIC  METHODS ^
@@ -139,10 +136,9 @@ class Burst extends Tunable {
     @overrides @ Module
   */
   _extendDefaults() {
-
     // remove tween properties (not callbacks)
-    this._removeTweenProperties(this._o);
-    super._extendDefaults();
+    this._removeTweenProperties(this._o)
+    super._extendDefaults()
   }
 
   /*
@@ -154,10 +150,9 @@ class Burst extends Tunable {
   */
   _removeTweenProperties(o) {
     for (const key in h.tweenOptionMap) {
-
       // remove all items that are not declared in _defaults
       if (this._defaults[key] == null) {
-        delete o[key];
+        delete o[key]
       }
     }
   }
@@ -168,19 +163,18 @@ class Burst extends Tunable {
     @private
   */
   _recalcModulesTime() {
-    let modules = this.masterSwirl._modules
+    const modules = this.masterSwirl._modules
     const swirls = this._swirls
     let shiftTime = 0
 
     for (let i = 0; i < modules.length; i++) {
       const tween = modules[i].tween,
         packTime = this._calcPackTime(swirls[i])
-      tween._setProp({ 'duration': packTime,
-        'shiftTime': shiftTime });
-      shiftTime += packTime;
+      tween._setProp({ duration: packTime, shiftTime: shiftTime })
+      shiftTime += packTime
     }
 
-    (this.timeline as Timeline)._recalcTotalDuration();
+    ;(this.timeline as Timeline)._recalcTotalDuration()
   }
 
   /*
@@ -189,7 +183,6 @@ class Burst extends Tunable {
     @param {object} New options.
   */
   _tuneSwirls(o) {
-
     // get swirls in first pack
     const pack0 = this._swirls[0]
     for (let i = 0; i < pack0.length; i++) {
@@ -200,19 +193,21 @@ class Burst extends Tunable {
       // since the `degreeShift` participate in
       // children position calculations, we need to keep
       // the old `degreeShift` value if new not set
-      const isDegreeShift = (option.degreeShift != null);
+      const isDegreeShift = option.degreeShift != null
       if (!isDegreeShift) {
-        option.degreeShift = this._swirls[0][i]._props.degreeShift;
+        option.degreeShift = this._swirls[0][i]._props.degreeShift
       }
 
-      this._addBurstProperties(option, i);
+      this._addBurstProperties(option, i)
 
       // after burst position calculation - delete the old `degreeShift`
       // from the options, since anyways we have copied it from the swirl
-      if (!isDegreeShift) { delete option.degreeShift; }
+      if (!isDegreeShift) {
+        delete option.degreeShift
+      }
 
-      swirl.tune(option);
-      this._refreshBurstOptions(swirl._modules, i);
+      swirl.tune(option)
+      this._refreshBurstOptions(swirl._modules, i)
     }
   }
 
@@ -227,8 +222,8 @@ class Burst extends Tunable {
     for (let j = 1; j < modules.length; j++) {
       const module = modules[j]
       const options = {}
-      this._addBurstProperties(options, i, j);
-      module._tuneNewOptions(options);
+      this._addBurstProperties(options, i, j)
+      module._tuneNewOptions(options)
     }
   }
 
@@ -238,14 +233,14 @@ class Burst extends Tunable {
     @returns {object} New master swirl.
   */
   _masterThen(o) {
-    this.masterSwirl.then(o);
+    this.masterSwirl.then(o)
 
     // get the latest master swirl in then chain
     const newMasterSwirl = h.getLastItem(this.masterSwirl._modules)
 
     // save to masterSwirls
-    this._masterSwirls.push(newMasterSwirl);
-    return newMasterSwirl;
+    this._masterSwirls.push(newMasterSwirl)
+    return newMasterSwirl
   }
 
   /*
@@ -258,26 +253,25 @@ class Burst extends Tunable {
     const newPack = []
 
     for (let i = 0; i < pack.length; i++) {
-
       // get option by modulus
       // TODO: define options type
       const options: any = this._getChildOption(o, i)
-      const swirl = pack[i];
+      const swirl = pack[i]
 
       // add new Master Swirl as parent of new ChildSwirl
-      options.parent = this.el;
+      options.parent = this.el
 
-      this._addBurstProperties(options, i, this._masterSwirls.length - 1);
+      this._addBurstProperties(options, i, this._masterSwirls.length - 1)
 
-      swirl.then(options);
+      swirl.then(options)
 
       // save the new item in `then` chain
-      newPack.push(h.getLastItem(swirl._modules));
+      newPack.push(h.getLastItem(swirl._modules))
     }
 
     // save the pack to _swirls object
-    this._swirls[this._masterSwirls.length - 1] = newPack;
-    return newPack;
+    this._swirls[this._masterSwirls.length - 1] = newPack
+    return newPack
   }
 
   /*
@@ -286,29 +280,29 @@ class Burst extends Tunable {
     @overrides @ Thenable
   */
   _vars() {
-    super._vars();
+    super._vars()
 
     // just buffer timeline for calculations
-    this._bufferTimeline = new Timeline;
+    this._bufferTimeline = new Timeline()
   }
 
   /*
     Method for initial render of the module.
   */
   _render() {
-    this._o.isWithShape = false;
-    this._o.isSwirl = this._props.isSwirl;
-    this._o.callbacksContext = this;
+    this._o.isWithShape = false
+    this._o.isSwirl = this._props.isSwirl
+    this._o.callbacksContext = this
 
     // save timeline options and remove from _o
     // cuz the master swirl should not get them
-    this._saveTimelineOptions(this._o);
+    this._saveTimelineOptions(this._o)
 
-    this.masterSwirl = new MainSwirl(this._o);
-    this._masterSwirls = [this.masterSwirl];
-    this.el = this.masterSwirl.el;
+    this.masterSwirl = new MainSwirl(this._o)
+    this._masterSwirls = [this.masterSwirl]
+    this.el = this.masterSwirl.el
 
-    this._renderSwirls();
+    this._renderSwirls()
   }
 
   /*
@@ -321,10 +315,10 @@ class Burst extends Tunable {
 
     for (let i = 0; i < p.count; i++) {
       const option = this._getChildOption(this._o, i)
-      pack.push(new ChildSwirl(this._addOptionalProps(option, i)));
+      pack.push(new ChildSwirl(this._addOptionalProps(option, i)))
     }
-    this._swirls = { 0: pack };
-    this._setSwirlDuration(this.masterSwirl, this._calcPackTime(pack));
+    this._swirls = { 0: pack }
+    this._setSwirlDuration(this.masterSwirl, this._calcPackTime(pack))
   }
 
   /*
@@ -334,8 +328,8 @@ class Burst extends Tunable {
     @param {object} The object to save the timeline options from.
   */
   _saveTimelineOptions(o) {
-    this._timelineOptions = o.timeline;
-    delete o.timeline;
+    this._timelineOptions = o.timeline
+    delete o.timeline
   }
 
   /*
@@ -350,10 +344,10 @@ class Burst extends Tunable {
       const tween = pack[i].tween
       const p = tween._props
 
-      maxTime = Math.max(p.repeatTime / p.speed, maxTime);
+      maxTime = Math.max(p.repeatTime / p.speed, maxTime)
     }
 
-    return maxTime;
+    return maxTime
   }
 
   /*
@@ -362,9 +356,9 @@ class Burst extends Tunable {
     @param {number} Duration to set.
   */
   _setSwirlDuration(swirl, duration) {
-    swirl.tween._setProp('duration', duration);
+    swirl.tween._setProp('duration', duration)
     const isRecalc = swirl.timeline && swirl.timeline._recalcTotalDuration
-    isRecalc && swirl.timeline._recalcTotalDuration();
+    isRecalc && swirl.timeline._recalcTotalDuration()
   }
 
   /*
@@ -377,9 +371,9 @@ class Burst extends Tunable {
   _getChildOption(obj, i) {
     const options = {}
     for (const key in obj.children) {
-      options[key] = this._getPropByMod(key, i, obj.children);
+      options[key] = this._getPropByMod(key, i, obj.children)
     }
-    return options;
+    return options
   }
 
   /*
@@ -392,7 +386,7 @@ class Burst extends Tunable {
   */
   _getPropByMod(name, index, sourceObj = {}) {
     const prop = sourceObj[name]
-    return Array.isArray(prop) ? prop[index % prop.length] : prop;
+    return Array.isArray(prop) ? prop[index % prop.length] : prop
   }
 
   /*
@@ -402,12 +396,12 @@ class Burst extends Tunable {
     @param {number} Index of the property.
   */
   _addOptionalProps(options, index) {
-    options.index = index;
-    options.parent = this.masterSwirl.el;
+    options.index = index
+    options.parent = this.masterSwirl.el
 
-    this._addBurstProperties(options, index);
+    this._addBurstProperties(options, index)
 
-    return options;
+    return options
   }
 
   /*
@@ -418,29 +412,39 @@ class Burst extends Tunable {
     @param {number} Index of the main swirl.
   */
   _addBurstProperties(options, index, i?) {
-
     // save index of the module
     const mainIndex = this._index
 
     // temporary change the index to parse index based properties like stagger
-    this._index = index;
+    this._index = index
 
     // parse degree shift for the bit
-    const degreeShift = this._parseProperty('degreeShift', options.degreeShift || 0)
+    const degreeShift = this._parseProperty(
+      'degreeShift',
+      options.degreeShift || 0
+    )
 
     // put the index of the module back
-    this._index = mainIndex;
+    this._index = mainIndex
 
     const p = this._props
-    const degreeCnt = (p.degree % 360 === 0) ? p.count : p.count - 1 || 1
+    const degreeCnt = p.degree % 360 === 0 ? p.count : p.count - 1 || 1
     const step = p.degree / degreeCnt
-    const pointStart = this._getSidePoint('start', index * step + degreeShift, i)
+    const pointStart = this._getSidePoint(
+      'start',
+      index * step + degreeShift,
+      i
+    )
     const pointEnd = this._getSidePoint('end', index * step + degreeShift, i)
 
-    options.x = this._getDeltaFromPoints('x', pointStart, pointEnd);
-    options.y = this._getDeltaFromPoints('y', pointStart, pointEnd);
+    options.x = this._getDeltaFromPoints('x', pointStart, pointEnd)
+    options.y = this._getDeltaFromPoints('y', pointStart, pointEnd)
 
-    options.rotate = this._getBitRotation((options.rotate || 0), degreeShift, index);
+    options.rotate = this._getBitRotation(
+      options.rotate || 0,
+      degreeShift,
+      index
+    )
   }
 
   /*
@@ -453,30 +457,31 @@ class Burst extends Tunable {
      @returns  {number}         Rotation in burst.
   */
   _getBitRotation(rotationProperty = 0, rotationShift = 0, i) {
-    let p = this._props
-    let degCnt = (p.degree % 360 === 0) ? p.count : p.count - 1 || 1
-    let step = p.degree / degCnt
+    const p = this._props
+    const degCnt = p.degree % 360 === 0 ? p.count : p.count - 1 || 1
+    const step = p.degree / degCnt
     let rotate = i * step + 90
 
-    rotate += rotationShift;
+    rotate += rotationShift
 
     // if not delta option
-    if (!this._isDelta(rotationProperty)) { rotationProperty += rotate; }
-    else {
+    if (!this._isDelta(rotationProperty)) {
+      rotationProperty += rotate
+    } else {
       const delta = {}
       const keys = Object.keys(rotationProperty)
       let start = keys[0]
       let end = rotationProperty[start]
 
-      start = h.parseStringOption(start, i);
-      end = h.parseStringOption(end, i);
+      start = h.parseStringOption(start, i)
+      end = h.parseStringOption(end, i)
 
       // new start = newEnd
-      delta[parseFloat(start) + rotate] = parseFloat(end) + rotate;
+      delta[parseFloat(start) + rotate] = parseFloat(end) + rotate
 
-      rotationProperty = delta as number;
+      rotationProperty = delta as number
     }
-    return rotationProperty;
+    return rotationProperty
   }
 
   /**
@@ -497,9 +502,8 @@ class Burst extends Tunable {
       rotate: rotate,
 
       // center:  { x: p.center, y: p.center }
-      center: { x: 0,
-        y: 0 },
-    });
+      center: { x: 0, y: 0 }
+    })
   }
 
   /*
@@ -513,8 +517,8 @@ class Burst extends Tunable {
     return {
       radius: this._getRadiusByKey('radius', side, i),
       radiusX: this._getRadiusByKey('radiusX', side, i),
-      radiusY: this._getRadiusByKey('radiusY', side, i),
-    };
+      radiusY: this._getRadiusByKey('radiusY', side, i)
+    }
   }
 
   /*
@@ -530,8 +534,11 @@ class Burst extends Tunable {
     const deltas = swirl._deltas
     const props = swirl._props
 
-    if (deltas[key] != null) { return deltas[key][side]; }
-    else if (props[key] != null) { return props[key]; }
+    if (deltas[key] != null) {
+      return deltas[key][side]
+    } else if (props[key] != null) {
+      return props[key]
+    }
   }
 
   /*
@@ -545,9 +552,11 @@ class Burst extends Tunable {
   _getDeltaFromPoints(key, pointStart, pointEnd) {
     let delta = {}
     if (pointStart[key] === pointEnd[key]) {
-      delta = pointStart[key];
-    } else { delta[pointStart[key]] = pointEnd[key]; }
-    return delta;
+      delta = pointStart[key]
+    } else {
+      delta[pointStart[key]] = pointEnd[key]
+    }
+    return delta
   }
 
   /*
@@ -556,11 +565,10 @@ class Burst extends Tunable {
     @override @ Tweenable
   */
   _makeTimeline() {
-
     // restore timeline options that were deleted in _render method
-    this._o.timeline = this._timelineOptions;
-    super._makeTimeline();
-    (this.timeline as Timeline).add(this.masterSwirl, this._swirls[0]);
+    this._o.timeline = this._timelineOptions
+    super._makeTimeline()
+    ;(this.timeline as Timeline).add(this.masterSwirl, this._swirls[0])
   }
 
   /*
@@ -568,14 +576,19 @@ class Burst extends Tunable {
     @private
     @override @ Tweenable
   */
-  _makeTween() { /* don't create any tween */ }
+  _makeTween() {
+    /* don't create any tween */
+  }
   /*
     Override `_hide` and `_show` methods on module
     since we don't have to hide nor show on the module.
   */
-  _hide() { /* do nothing */ }
-  _show() { /* do nothing */ }
+  _hide() {
+    /* do nothing */
+  }
+  _show() {
+    /* do nothing */
+  }
 }
 
-
-export default Burst;
+export default Burst

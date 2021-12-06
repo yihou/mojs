@@ -6,7 +6,7 @@
  * DS207: Consider shorter variations of null checks
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-import h from '../h';
+import h from '../h'
 
 // ## PathEasing
 // Class allows you to specify custom easing function
@@ -44,13 +44,13 @@ class PathEasing {
   // @method _vars
   _vars() {
     // options
-    this._precompute = h.clamp((this.o.precompute || 1450), 100, 10000);
-    this._step = 1 / this._precompute;
-    this._rect = this.o.rect || 100;
-    this._approximateMax = this.o.approximateMax || 5;
-    this._eps = this.o.eps || 0.001;
+    this._precompute = h.clamp(this.o.precompute || 1450, 100, 10000)
+    this._step = 1 / this._precompute
+    this._rect = this.o.rect || 100
+    this._approximateMax = this.o.approximateMax || 5
+    this._eps = this.o.eps || 0.001
     // util variables
-    return this._boundsPrevProgress = -1;
+    return (this._boundsPrevProgress = -1)
   }
 
   // Constructor
@@ -58,29 +58,32 @@ class PathEasing {
     // the class can work as a "creator" of self instances
     // so no need to init if 'creator' passed instead of path
     if (o == null) {
-      o = {};
+      o = {}
     }
-    this.o = o;
+    this.o = o
     if (path === 'creator') {
-      return;
+      return
     }
-    this.path = h.parsePath(path);
-    if ((this.path == null)) {
-      h.error('Error while parsing the path');
+    this.path = h.parsePath(path)
+    if (this.path == null) {
+      h.error('Error while parsing the path')
       return
     }
 
-    this._vars();
+    this._vars()
     // normalize start and end x value of the path
-    this.path.setAttribute('d', this._normalizePath(this.path.getAttribute('d')));
+    this.path.setAttribute(
+      'd',
+      this._normalizePath(this.path.getAttribute('d'))
+    )
 
-    this.pathLength = this.path.getTotalLength();
+    this.pathLength = this.path.getTotalLength()
 
-    this.sample = h.bind(this.sample, this);
-    this._hardSample = h.bind(this._hardSample, this);
+    this.sample = h.bind(this.sample, this)
+    this._hardSample = h.bind(this._hardSample, this)
 
     // console.time 'pre sample'
-    this._preSample();
+    this._preSample()
     // console.timeEnd 'pre sample'
   }
 
@@ -91,18 +94,22 @@ class PathEasing {
    * @sideEffect {Array} _samples - set of sampled points
    */
   _preSample() {
-    this._samples = [];
+    this._samples = []
     return (() => {
-      const result: any[] = [];
-      for (let i = 0, end = this._precompute, asc = 0 <= end; asc ? i <= end : i >= end; asc ? i++ : i--) {
-        const progress = i * this._step;
-        const length = this.pathLength * progress;
-        const point = this.path.getPointAtLength(length);
-        this._samples[i] = {point, length, progress}
-        result.push(this._samples[i]);
+      const result: any[] = []
+      for (
+        let i = 0, end = this._precompute, asc = 0 <= end;
+        asc ? i <= end : i >= end;
+        asc ? i++ : i--
+      ) {
+        const progress = i * this._step
+        const length = this.pathLength * progress
+        const point = this.path.getPointAtLength(length)
+        this._samples[i] = { point, length, progress }
+        result.push(this._samples[i])
       }
-      return result;
-    })();
+      return result
+    })()
   }
 
   /**
@@ -114,69 +121,75 @@ class PathEasing {
    *         - end   {number}: highest boundary
    */
   _findBounds(array, p) {
-    let direction, end, loopEnd, start;
+    let direction, end, loopEnd, start
     if (p === this._boundsPrevProgress) {
-      return this._prevBounds;
+      return this._prevBounds
     }
     // get the start index in the array
     // reset the cached prev index if new progress
     // is smaller then previous one or it is not defined
     if (this._boundsStartIndex == null) {
-      this._boundsStartIndex = 0;
+      this._boundsStartIndex = 0
     }
 
-    const len = array.length;
+    const len = array.length
     // get start and end indexes of the loop and save the direction
     if (this._boundsPrevProgress > p) {
-      loopEnd = 0;
-      direction = 'reverse';
+      loopEnd = 0
+      direction = 'reverse'
     } else {
-      loopEnd = len;
-      direction = 'forward';
+      loopEnd = len
+      direction = 'forward'
     }
 
     // set default start and end bounds to the
     // very first and the very last items in array
     if (direction === 'forward') {
-      start = array[0];
-      end = array[array.length - 1];
+      start = array[0]
+      end = array[array.length - 1]
     } else {
-      start = array[array.length - 1];
-      end = array[0];
+      start = array[array.length - 1]
+      end = array[0]
     }
 
     // loop thru the array from the @_boundsStartIndex
-    for (let i = this._boundsStartIndex, end1 = loopEnd, asc = this._boundsStartIndex <= end1; asc ? i < end1 : i > end1; asc ? i++ : i--) {
-      const value = array[i];
-      let pointX = value.point.x / this._rect;
-      let pointP = p;
+    for (
+      let i = this._boundsStartIndex,
+        end1 = loopEnd,
+        asc = this._boundsStartIndex <= end1;
+      asc ? i < end1 : i > end1;
+      asc ? i++ : i--
+    ) {
+      const value = array[i]
+      let pointX = value.point.x / this._rect
+      let pointP = p
       // if direction is reverse swap pointX and pointP
       // for if statement
       if (direction === 'reverse') {
-        const buffer = pointX;
-        pointX = pointP;
-        pointP = buffer;
+        const buffer = pointX
+        pointX = pointP
+        pointP = buffer
       }
       // the next statement is nicer but it creates
       // a new object, so bothers GC
       // {pointX, pointP} = {pointX: pointP, pointP: pointX}
       // save the latest smaller value as start value
       if (pointX < pointP) {
-        start = value;
-        this._boundsStartIndex = i;
+        start = value
+        this._boundsStartIndex = i
         // save the first larger value as end value
         // and break immediately
       } else {
-        end = value;
-        break;
+        end = value
+        break
       }
     }
-    this._boundsPrevProgress = p;
+    this._boundsPrevProgress = p
     // return the first item if start wasn't found
     // start ?= array[0]
     // end   ?= array[array.length-1]
 
-    return this._prevBounds = {start, end};
+    return (this._prevBounds = { start, end })
   }
 
   /**
@@ -188,13 +201,13 @@ class PathEasing {
    * @return {number} easing y
    */
   sample(p) {
-    p = h.clamp(p, 0, 1);
-    const bounds = this._findBounds(this._samples, p);
-    const res = this._checkIfBoundsCloseEnough(p, bounds);
+    p = h.clamp(p, 0, 1)
+    const bounds = this._findBounds(this._samples, p)
+    const res = this._checkIfBoundsCloseEnough(p, bounds)
     if (res != null) {
-      return res;
+      return res
     }
-    return this._findApproximate(p, bounds.start, bounds.end);
+    return this._findApproximate(p, bounds.start, bounds.end)
   }
 
   /**
@@ -208,12 +221,12 @@ class PathEasing {
    */
   _checkIfBoundsCloseEnough(p, bounds) {
     // check if start bound is close enough
-    const y = this._checkIfPointCloseEnough(p, bounds.start.point);
+    const y = this._checkIfPointCloseEnough(p, bounds.start.point)
     if (y != null) {
-      return y;
+      return y
     }
     // check if end bound is close enough
-    return this._checkIfPointCloseEnough(p, bounds.end.point);
+    return this._checkIfPointCloseEnough(p, bounds.end.point)
   }
 
   /**
@@ -226,7 +239,7 @@ class PathEasing {
    */
   _checkIfPointCloseEnough(p, point) {
     if (h.closeEnough(p, point.x / this._rect, this._eps)) {
-      return this._resolveY(point);
+      return this._resolveY(point)
     }
   }
 
@@ -238,9 +251,9 @@ class PathEasing {
    * @return {object} approximation
    */
   _approximate(start, end, p) {
-    const deltaP = end.point.x - start.point.x;
-    const percentP = (p - (start.point.x / this._rect)) / (deltaP / this._rect);
-    return start.length + (percentP * (end.length - start.length));
+    const deltaP = end.point.x - start.point.x
+    const percentP = (p - start.point.x / this._rect) / (deltaP / this._rect)
+    return start.length + percentP * (end.length - start.length)
   }
 
   /**
@@ -253,25 +266,27 @@ class PathEasing {
    */
   _findApproximate(p, start, end, approximateMax?) {
     if (approximateMax == null) {
-      approximateMax = this._approximateMax;
+      approximateMax = this._approximateMax
     }
-    const approximation = this._approximate(start, end, p);
-    const point = this.path.getPointAtLength(approximation);
-    const x = point.x / this._rect;
+    const approximation = this._approximate(start, end, p)
+    const point = this.path.getPointAtLength(approximation)
+    const x = point.x / this._rect
     // if close enough resolve the y value
     if (h.closeEnough(p, x, this._eps)) {
-      return this._resolveY(point);
+      return this._resolveY(point)
     } else {
       // if looping for a long time
       if (--approximateMax < 1) {
-        return this._resolveY(point);
+        return this._resolveY(point)
       }
       // not precise enough so we will call self
       // again recursively, lets find arguments for the call
-      const newPoint = {point, length: approximation};
-      const args = p < x ? [p, start, newPoint, approximateMax]
-        : [p, newPoint, end, approximateMax];
-      return this._findApproximate.apply(this, args);
+      const newPoint = { point, length: approximation }
+      const args =
+        p < x
+          ? [p, start, newPoint, approximateMax]
+          : [p, newPoint, end, approximateMax]
+      return this._findApproximate.apply(this, args)
     }
   }
 
@@ -281,7 +296,7 @@ class PathEasing {
    * @return {number} normalized y
    */
   _resolveY(point) {
-    return 1 - (point.y / this._rect);
+    return 1 - point.y / this._rect
   }
 
   /**
@@ -292,21 +307,24 @@ class PathEasing {
    */
   _normalizePath(path) {
     // SVG path commands
-    let normalizedPath;
-    const svgCommandsRegexp = /[M|LHVCSQTA]/gim;
-    const points = path.split(svgCommandsRegexp);
+    let normalizedPath
+    const svgCommandsRegexp = /[M|LHVCSQTA]/gim
+    const points = path.split(svgCommandsRegexp)
     // remove the first empty item - it is always
     // empty cuz we split by M
-    points.shift();
-    const commands = path.match(svgCommandsRegexp);
+    points.shift()
+    const commands = path.match(svgCommandsRegexp)
     // normalize the x value of the start segment to 0
-    const startIndex = 0;
-    points[startIndex] = this._normalizeSegment(points[startIndex]);
+    const startIndex = 0
+    points[startIndex] = this._normalizeSegment(points[startIndex])
     // normalize the x value of the end segment to _rect value
-    const endIndex = points.length - 1;
-    points[endIndex] = this._normalizeSegment(points[endIndex], this._rect || 100);
+    const endIndex = points.length - 1
+    points[endIndex] = this._normalizeSegment(
+      points[endIndex],
+      this._rect || 100
+    )
 
-    normalizedPath = this._joinNormalizedPath(commands, points);
+    normalizedPath = this._joinNormalizedPath(commands, points)
     // form the normalized path
     return normalizedPath
   }
@@ -318,14 +336,14 @@ class PathEasing {
    * @return {string} Formed normalized path.
    */
   _joinNormalizedPath(commands, points) {
-    let normalizedPath = '';
+    let normalizedPath = ''
     for (let i = 0; i < commands.length; i++) {
-      const command = commands[i];
-      const space = i === 0 ? '' : ' ';
-      normalizedPath += `${space}${command}${points[i].trim()}`;
+      const command = commands[i]
+      const space = i === 0 ? '' : ' '
+      normalizedPath += `${space}${command}${points[i].trim()}`
     }
 
-    return normalizedPath;
+    return normalizedPath
   }
 
   /**
@@ -337,44 +355,44 @@ class PathEasing {
    */
   _normalizeSegment(segment, value?) {
     if (value == null) {
-      value = 0;
+      value = 0
     }
-    segment = segment.trim();
-    const nRgx = /([-+])?((\d+(\.(\d|\e([-+])?)+)?)|(\.?(\d|\e|([-+]))+))/gim;
-    const pairs = this._getSegmentPairs(segment.match(nRgx));
+    segment = segment.trim()
+    const nRgx = /([-+])?((\d+(\.(\d|\e([-+])?)+)?)|(\.?(\d|\e|([-+]))+))/gim
+    const pairs = this._getSegmentPairs(segment.match(nRgx))
     // get x value of the latest point
-    const lastPoint = pairs[pairs.length - 1];
-    const x = lastPoint[0];
-    const parsedX = Number(x);
+    const lastPoint = pairs[pairs.length - 1]
+    const x = lastPoint[0]
+    const parsedX = Number(x)
     // if the x point isn't the same as value, set it to the value
     if (parsedX !== value) {
       // join pairs to form segment
-      segment = '';
-      lastPoint[0] = value;
+      segment = ''
+      lastPoint[0] = value
       for (let i = 0; i < pairs.length; i++) {
-        const point = pairs[i];
-        const space = i === 0 ? '' : ' ';
-        segment += `${space}${point[0]},${point[1]}`;
+        const point = pairs[i]
+        const space = i === 0 ? '' : ' '
+        segment += `${space}${point[0]},${point[1]}`
       }
     }
-    return segment;
+    return segment
   }
 
   // Method to gather array values to pairs.
   // @param  {any[]} Array to search pairs in.
   // @return {any[]} Matrix of pairs.
   _getSegmentPairs(array) {
-    if ((array.length % 2) !== 0) {
-      h.error('Failed to parse the path - segment pairs are not even.', array);
+    if (array.length % 2 !== 0) {
+      h.error('Failed to parse the path - segment pairs are not even.', array)
     }
-    const newArray: any[][] = [];
+    const newArray: any[][] = []
     // loop over the array by 2
     // and save the pairs
     for (let i = 0; i < array.length; i += 2) {
-      const pair = [array[i], array[i + 1]];
-      newArray.push(pair);
+      const pair = [array[i], array[i + 1]]
+      newArray.push(pair)
     }
-    return newArray;
+    return newArray
   }
 
   /**
@@ -387,10 +405,10 @@ class PathEasing {
    * @return {object} easing y
    */
   create(path, o?) {
-    const handler = new PathEasing(path, o);
-    (handler.sample as any).path = handler.path;
-    return handler.sample;
+    const handler = new PathEasing(path, o)
+    ;(handler.sample as any).path = handler.path
+    return handler.sample
   }
 }
 
-export default PathEasing;
+export default PathEasing

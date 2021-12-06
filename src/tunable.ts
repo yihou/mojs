@@ -1,9 +1,8 @@
-import h from './h';
-import Thenable from './thenable';
+import h from './h'
+import Thenable from './thenable'
 import Timeline from './tween/timeline'
 
 class Tuneable extends Thenable {
-
   /*
     Method to start the animation with optional new options.
     @public
@@ -11,27 +10,26 @@ class Tuneable extends Thenable {
     @returns {object} this.
   */
   tune(o) {
-
     // if options object was passed
     if (o && Object.keys(o).length) {
-      this._transformHistory(o);
-      this._tuneNewOptions(o);
+      this._transformHistory(o)
+      this._tuneNewOptions(o)
 
       // restore array prop values because _props
       // contain them as parsed arrays
       // but we need the as strings to store in history
       // and merge in history chains
-      this._history[0] = h.cloneObj(this._props);
+      this._history[0] = h.cloneObj(this._props)
       for (const key in this._arrayPropertyMap) {
         if (o[key] != null) {
-          this._history[0][key] = this._preparsePropValue(key, o[key]);
+          this._history[0][key] = this._preparsePropValue(key, o[key])
         }
       }
 
-      this._tuneSubModules();
-      this._resetTweens();
+      this._tuneSubModules()
+      this._resetTweens()
     }
-    return this;
+    return this
   }
 
   /*
@@ -40,7 +38,7 @@ class Tuneable extends Thenable {
     @returns this.
   */
   generate() {
-    return this.tune(this._o);
+    return this.tune(this._o)
   }
 
   // ^ PUBLIC  METHOD(S) ^
@@ -69,7 +67,7 @@ class Tuneable extends Thenable {
 
       // don't transform for childOptions
       // if ( key === 'childOptions' ) { continue; }
-      this._transformHistoryFor(key, this._preparsePropValue(key, value));
+      this._transformHistoryFor(key, this._preparsePropValue(key, value))
     }
   }
 
@@ -80,10 +78,12 @@ class Tuneable extends Thenable {
   */
   _transformHistoryFor(key, value) {
     for (let i = 0; i < this._history.length; i++) {
-      value = this._transformHistoryRecord(i, key, value);
+      value = this._transformHistoryRecord(i, key, value)
 
       // break if no further history modifications needed
-      if (value == null) { break; }
+      if (value == null) {
+        break
+      }
     }
   }
 
@@ -98,44 +98,45 @@ class Tuneable extends Thenable {
                        history modifications is needed.
   */
   _transformHistoryRecord(index, key, newVal, currRecord?, nextRecord?) {
-
     // newVal = this._parseProperty( key, newVal );
-    if (newVal == null) { return null; }
+    if (newVal == null) {
+      return null
+    }
 
     // fallback to history records, if wasn't specified
-    currRecord = (currRecord == null) ? this._history[index] : currRecord;
-    nextRecord = (nextRecord == null) ? this._history[index + 1] : nextRecord;
+    currRecord = currRecord == null ? this._history[index] : currRecord
+    nextRecord = nextRecord == null ? this._history[index + 1] : nextRecord
 
     const oldVal = currRecord[key]
-    const nextVal = (nextRecord == null) ? null : nextRecord[key]
+    const nextVal = nextRecord == null ? null : nextRecord[key]
 
     // if index is 0 - always save the newVal
     // and return non-delta for subsequent modifications
     if (index === 0) {
-      currRecord[key] = newVal;
+      currRecord[key] = newVal
 
       // always return on tween properties
-      if (h.isTweenProp(key) && key !== 'duration') { return null; }
+      if (h.isTweenProp(key) && key !== 'duration') {
+        return null
+      }
 
       // non tween properties
       const isRewriteNext = this._isRewriteNext(oldVal, nextVal),
-        returnVal = (this._isDelta(newVal)) ? h.getDeltaEnd(newVal) : newVal
-      return (isRewriteNext) ? returnVal : null;
+        returnVal = this._isDelta(newVal) ? h.getDeltaEnd(newVal) : newVal
+      return isRewriteNext ? returnVal : null
     } else {
-
       // if was delta and came none-delta - rewrite
       // the start of the delta and stop
       if (this._isDelta(oldVal)) {
-        currRecord[key] = { [newVal]: h.getDeltaEnd(oldVal) };
-        return null;
+        currRecord[key] = { [newVal]: h.getDeltaEnd(oldVal) }
+        return null
       } else {
-
         // if the old value is not delta and the new one is
-        currRecord[key] = newVal;
+        currRecord[key] = newVal
 
         // if the next item has the same value - return the
         // item for subsequent modifications or stop
-        return (this._isRewriteNext(oldVal, nextVal)) ? newVal : null;
+        return this._isRewriteNext(oldVal, nextVal) ? newVal : null
       }
     }
   }
@@ -149,25 +150,26 @@ class Tuneable extends Thenable {
     @returns {boolean} If need to rewrite the next value.
   */
   _isRewriteNext(currVal, nextVal) {
-
     // return false if nothing to rewrite next
-    if (nextVal == null && currVal != null) { return false; }
+    if (nextVal == null && currVal != null) {
+      return false
+    }
 
-    let isEqual = (currVal === nextVal)
-    let isNextDelta = this._isDelta(nextVal)
-    let isDelta = this._isDelta(currVal)
+    const isEqual = currVal === nextVal
+    const isNextDelta = this._isDelta(nextVal)
+    const isDelta = this._isDelta(currVal)
     let isValueDeltaChain = false
     let isDeltaChain = false
 
     if (isDelta && isNextDelta) {
       if (h.getDeltaEnd(currVal) == h.getDeltaStart(nextVal)) {
-        isDeltaChain = true;
+        isDeltaChain = true
       }
     } else if (isNextDelta) {
-      isValueDeltaChain = h.getDeltaStart(nextVal) === `${currVal}`;
+      isValueDeltaChain = h.getDeltaStart(nextVal) === `${currVal}`
     }
 
-    return isEqual || isValueDeltaChain || isDeltaChain;
+    return isEqual || isValueDeltaChain || isDeltaChain
   }
 
   /*
@@ -176,7 +178,7 @@ class Tuneable extends Thenable {
   */
   _tuneSubModules() {
     for (let i = 1; i < this._modules.length; i++) {
-      this._modules[i]._tuneNewOptions(this._history[i]);
+      this._modules[i]._tuneNewOptions(this._history[i])
     }
   }
 
@@ -187,22 +189,26 @@ class Tuneable extends Thenable {
   */
   _resetTweens() {
     let shift = 0
-    let tweens = this.timeline._timelines
+    const tweens = this.timeline._timelines
 
     // if `isTimelineLess` return
-    if (tweens == null) { return; }
+    if (tweens == null) {
+      return
+    }
 
     for (let i = 0; i < tweens.length; i++) {
       const tween = tweens[i]
       const prevTween = tweens[i - 1]
 
-      shift += (prevTween) ? prevTween._props.repeatTime : 0;
-      this._resetTween(tween, this._history[i], shift);
+      shift += prevTween ? prevTween._props.repeatTime : 0
+      this._resetTween(tween, this._history[i], shift)
     }
-    this.timeline._setProp(this._props.timeline);
+    this.timeline._setProp(this._props.timeline)
 
-    if (typeof (this.timeline as Timeline)._recalcTotalDuration === 'function') {
-      (this.timeline as Timeline)._recalcTotalDuration();
+    if (
+      typeof (this.timeline as Timeline)._recalcTotalDuration === 'function'
+    ) {
+      ;(this.timeline as Timeline)._recalcTotalDuration()
     }
   }
 
@@ -213,8 +219,9 @@ class Tuneable extends Thenable {
     @param {number} Optional number to shift tween start time.
   */
   _resetTween(tween, o, shift = 0) {
-    o.shiftTime = shift; tween._setProp(o);
+    o.shiftTime = shift
+    tween._setProp(o)
   }
 }
 
-export default Tuneable;
+export default Tuneable

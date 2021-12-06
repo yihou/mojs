@@ -35,23 +35,23 @@
 //   }
 // });
 
-import easing from '../easing/easing';
-import h from '../h';
-import Timeline from '../tween/timeline';
-import Tween from '../tween/tween';
-import {Color, Unit} from '../types'
+import easing from '../easing/easing'
+import h from '../h'
+import Timeline from '../tween/timeline'
+import Tween from '../tween/tween'
+import { Color, Unit } from '../types'
 
-import Delta from './delta';
+import Delta from './delta'
 
 // get tween properties
-const obj: any = {};
-Tween.prototype._declareDefaults.call(obj);
-const keys = Object.keys(obj._defaults);
+const obj: any = {}
+Tween.prototype._declareDefaults.call(obj)
+const keys = Object.keys(obj._defaults)
 for (let i = 0; i < keys.length; i++) {
-  obj._defaults[keys[i]] = 1;
+  obj._defaults[keys[i]] = 1
 }
-obj._defaults['timeline'] = 1;
-const TWEEN_PROPERTIES = obj._defaults;
+obj._defaults['timeline'] = 1
+const TWEEN_PROPERTIES = obj._defaults
 
 class Deltas {
   _o
@@ -79,22 +79,22 @@ class Deltas {
     teal: 'rgb(0,128,128)',
     white: 'rgb(255,255,255)',
     yellow: 'rgb(255,255,0)',
-    orange: 'rgb(255,128,0)',
-  };
+    orange: 'rgb(255,128,0)'
+  }
 
   _ignoreDeltasMap = {
     prevChainModule: 1,
     masterModule: 1
-  };
+  }
 
   timeline
 
   constructor(o: any = {}) {
-    this._o = o;
+    this._o = o
 
-    this._parseDeltas(o.options);
-    this._createDeltas();
-    this._createTimeline(this._mainTweenOptions);
+    this._parseDeltas(o.options)
+    this._createDeltas()
+    this._createTimeline(this._mainTweenOptions)
   }
 
   /*
@@ -104,9 +104,9 @@ class Deltas {
   */
   refresh(isBefore) {
     for (let i = 0; i < this._deltas.length; i++) {
-      this._deltas[i].refresh(isBefore);
+      this._deltas[i].refresh(isBefore)
     }
-    return this;
+    return this
   }
 
   /*
@@ -115,9 +115,9 @@ class Deltas {
   */
   restore() {
     for (let i = 0; i < this._deltas.length; i++) {
-      this._deltas[i].restore();
+      this._deltas[i].restore()
     }
-    return this;
+    return this
   }
 
   /**
@@ -126,7 +126,6 @@ class Deltas {
    * @param {object} obj Timeline options.
    */
   _createTimeline(obj) {
-
     // const o = this._o;
     // opts.timeline = opts.timeline || {};
     // opts.timeline.callbackOverrides = {
@@ -136,8 +135,8 @@ class Deltas {
     // send callbacksContext to timeline if set
     // o.callbacksContext && (opts.timeline.callbacksContext = o.callbacksContext);
     // opts.timeline
-    this.timeline = new Timeline;
-    this.timeline.add(this._deltas);
+    this.timeline = new Timeline()
+    this.timeline.add(this._deltas)
   }
 
   /*
@@ -145,19 +144,17 @@ class Deltas {
     @private
   */
   _createDeltas() {
-    this._deltas = [];
+    this._deltas = []
 
     // create main delta object
     this._deltas.push(
-      this._createDelta(this._mainDeltas, this._mainTweenOptions),
-    );
+      this._createDelta(this._mainDeltas, this._mainTweenOptions)
+    )
 
     // create child delta object
     for (let i = 0; i < this._childDeltas.length; i++) {
-      const delta = this._childDeltas[i];
-      this._deltas.push(
-        this._createDelta([delta.delta], delta.tweenOptions),
-      );
+      const delta = this._childDeltas[i]
+      this._deltas.push(this._createDelta([delta.delta], delta.tweenOptions))
     }
   }
 
@@ -169,14 +166,14 @@ class Deltas {
     @returns {object} Delta object
   */
   _createDelta(deltas, tweenOptions) {
-    const o = this._o;
+    const o = this._o
     return new Delta({
       deltas,
       tweenOptions,
       props: o.props,
       isChained: o.isChained,
-      callbacksContext: o.callbacksContext,
-    });
+      callbacksContext: o.callbacksContext
+    })
   }
 
   /*
@@ -185,33 +182,36 @@ class Deltas {
     @param {object} Options object to parse the deltas from.
   */
   _parseDeltas(obj) {
-
     // spilt main animation properties and main tween properties
-    const mainSplit = this._splitTweenOptions(obj);
+    const mainSplit = this._splitTweenOptions(obj)
 
     // main animation properties
-    const opts = mainSplit.delta;
+    const opts = mainSplit.delta
 
     // main tween properties
-    this._mainTweenOptions = mainSplit.tweenOptions;
+    this._mainTweenOptions = mainSplit.tweenOptions
 
-    this._mainDeltas = [];
-    this._childDeltas = [];
-    const keys = Object.keys(opts);
+    this._mainDeltas = []
+    this._childDeltas = []
+    const keys = Object.keys(opts)
 
     // loop thru all properties without tween ones
     for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
+      const key = keys[i]
 
       // is property is delta - parse it
       if (this._isDelta(opts[key]) && !this._ignoreDeltasMap[key]) {
-        const delta = this._splitAndParseDelta(key, opts[key]);
+        const delta = this._splitAndParseDelta(key, opts[key])
 
         // if parsed object has no tween values - it's delta of the main object
-        if (!delta.tweenOptions) { this._mainDeltas.push(delta.delta); }
+        if (!delta.tweenOptions) {
+          this._mainDeltas.push(delta.delta)
+        }
 
         // otherwise it is distinct delta object
-        else { this._childDeltas.push(delta); }
+        else {
+          this._childDeltas.push(delta)
+        }
       }
     }
   }
@@ -226,11 +226,11 @@ class Deltas {
                 @param {object} delta Parsed delta.
   */
   _splitAndParseDelta(name, object) {
-    const split = this._splitTweenOptions(object);
+    const split = this._splitTweenOptions(object)
 
     // parse delta in the object
-    split.delta = this._parseDelta(name, split.delta);
-    return split;
+    split.delta = this._parseDelta(name, split.delta)
+    return split
   }
 
   /*
@@ -241,11 +241,10 @@ class Deltas {
     @param {number} Module index.
   */
   _parseDelta(name, object, index?) {
-
     // if name is in _o.customProps - parse it regarding the type
-    return (this._o.customProps && (this._o.customProps[name] != null))
+    return this._o.customProps && this._o.customProps[name] != null
       ? this._parseDeltaByCustom(name, object, index)
-      : this._parseDeltaByGuess(name, object, index);
+      : this._parseDeltaByGuess(name, object, index)
   }
 
   /**
@@ -256,7 +255,7 @@ class Deltas {
     @param {number} index Module index.
   */
   _parseDeltaByCustom(name, object, index) {
-    return this._parsenumberDelta(name, object, index);
+    return this._parsenumberDelta(name, object, index)
 
     // const customRecord = this._o.customProps[name];
     // switch ( customRecord.type.toLowerCase() ) {
@@ -275,23 +274,27 @@ class Deltas {
     @param {number} index Module index.
   */
   _parseDeltaByGuess(name, object, index) {
-    const { start } = this._preparseDelta(object);
-    const o = this._o;
+    const { start } = this._preparseDelta(object)
+    const o = this._o
 
     // color values
-    if (isNaN(parseFloat(start)) && !start.match(/rand\(/) && !start.match(/stagger\(/)) {
-      return this._parseColorDelta(name, object);
+    if (
+      isNaN(parseFloat(start)) &&
+      !start.match(/rand\(/) &&
+      !start.match(/stagger\(/)
+    ) {
+      return this._parseColorDelta(name, object)
 
-    // array values
+      // array values
     } else if (o.arrayPropertyMap && o.arrayPropertyMap[name]) {
-      return this._parseArrayDelta(name, object);
+      return this._parseArrayDelta(name, object)
 
-    // unit or number values
+      // unit or number values
     } else {
       if (o.numberPropertyMap && o.numberPropertyMap[name]) {
-        return this._parsenumberDelta(name, object, index);
+        return this._parsenumberDelta(name, object, index)
       } else {
-        return this._parseUnitDelta(name, object, index);
+        return this._parseUnitDelta(name, object, index)
       }
     }
   }
@@ -304,26 +307,26 @@ class Deltas {
                         - one tween options ( could be empty if no tween opts )
   */
   _splitTweenOptions(delta) {
-    delta = { ...delta };
+    delta = { ...delta }
 
     const keys = Object.keys(delta)
     const tweenOptions = {}
     let isTween = false
 
     for (let i = 0; i < keys.length; i++) {
-      const key = keys[i];
+      const key = keys[i]
       if (TWEEN_PROPERTIES[key]) {
         if (delta[key] != null) {
-          tweenOptions[key] = delta[key];
-          isTween = true;
+          tweenOptions[key] = delta[key]
+          isTween = true
         }
-        delete delta[key];
+        delete delta[key]
       }
     }
     return {
       delta,
-      tweenOptions: (isTween) ? tweenOptions : undefined,
-    };
+      tweenOptions: isTween ? tweenOptions : undefined
+    }
   }
 
   /*
@@ -333,9 +336,9 @@ class Deltas {
     @returns {boolean}
   */
   _isDelta(optionsValue) {
-    let isObject = h.isObject(optionsValue);
-    isObject = isObject && !optionsValue.unit;
-    return !(!isObject || Array.isArray(optionsValue) || h.isDOM(optionsValue));
+    let isObject = h.isObject(optionsValue)
+    isObject = isObject && !optionsValue.unit
+    return !(!isObject || Array.isArray(optionsValue) || h.isDOM(optionsValue))
   }
 
   /*
@@ -347,10 +350,13 @@ class Deltas {
   */
   _parseColorDelta(key, value) {
     if (key === 'strokeLinecap') {
-      h.warn('Sorry, stroke-linecap property is not animatable yet, using the start(#{start}) value instead', value);
-      return {};
+      h.warn(
+        'Sorry, stroke-linecap property is not animatable yet, using the start(#{start}) value instead',
+        value
+      )
+      return {}
     }
-    const preParse = this._preparseDelta(value);
+    const preParse = this._preparseDelta(value)
 
     const startColorObj = this._makeColorObj(preParse.start) as Color
     const endColorObj = this._makeColorObj(preParse.end) as Color
@@ -365,10 +371,10 @@ class Deltas {
         r: endColorObj.r - startColorObj.r,
         g: endColorObj.g - startColorObj.g,
         b: endColorObj.b - startColorObj.b,
-        a: endColorObj.a - startColorObj.a,
-      } as Color,
-    };
-    return delta;
+        a: endColorObj.a - startColorObj.a
+      } as Color
+    }
+    return delta
   }
 
   /*
@@ -379,16 +385,16 @@ class Deltas {
     @returns {object} Parsed delta.
   */
   _parseArrayDelta(key, value) {
-    const preParse = this._preparseDelta(value);
+    const preParse = this._preparseDelta(value)
 
     const startArr = this._strToArr(preParse.start),
-      endArr = this._strToArr(preParse.end);
+      endArr = this._strToArr(preParse.end)
 
-    h.normDashArrays(startArr, endArr);
+    h.normDashArrays(startArr, endArr)
 
     for (let i = 0; i < startArr.length; i++) {
-      const end = endArr[i];
-      h.mergeUnits(startArr[i], end, key);
+      const end = endArr[i]
+      h.mergeUnits(startArr[i], end, key)
     }
 
     const delta = {
@@ -397,10 +403,10 @@ class Deltas {
       start: startArr,
       end: endArr,
       delta: h.calcArrDelta(startArr, endArr),
-      curve: preParse.curve,
-    };
+      curve: preParse.curve
+    }
 
-    return delta;
+    return delta
   }
 
   /**
@@ -412,12 +418,14 @@ class Deltas {
    * @returns {object} Parsed delta.
    */
   _parseUnitDelta(key: string, value: Delta, index: number) {
-    const preParse = this._preparseDelta(value);
+    const preParse = this._preparseDelta(value)
 
     const end = h.parseUnit(h.parseStringOption(preParse.end, index)) as Unit
-    const start = h.parseUnit(h.parseStringOption(preParse.start, index)) as Unit
+    const start = h.parseUnit(
+      h.parseStringOption(preParse.start, index)
+    ) as Unit
 
-    h.mergeUnits(start, end, key);
+    h.mergeUnits(start, end, key)
 
     const delta = {
       type: 'unit',
@@ -425,9 +433,9 @@ class Deltas {
       start: start,
       end: end,
       delta: end.value - start.value,
-      curve: preParse.curve,
-    };
-    return delta;
+      curve: preParse.curve
+    }
+    return delta
   }
 
   /**
@@ -439,10 +447,10 @@ class Deltas {
    * @returns {object} Parsed delta.
    */
   _parsenumberDelta(key, value, index) {
-    const preParse = this._preparseDelta(value);
+    const preParse = this._preparseDelta(value)
 
     const end = parseFloat(h.parseStringOption(preParse.end, index)),
-      start = parseFloat(h.parseStringOption(preParse.start, index));
+      start = parseFloat(h.parseStringOption(preParse.start, index))
 
     return {
       type: 'number',
@@ -450,8 +458,8 @@ class Deltas {
       start: start,
       end: end,
       delta: end - start,
-      curve: preParse.curve,
-    };
+      curve: preParse.curve
+    }
   }
 
   /*
@@ -463,25 +471,22 @@ class Deltas {
               @property {string, number} End value.
   */
   _preparseDelta(value) {
-
     // clone value object
-    value = { ...value };
+    value = { ...value }
 
     // parse curve if exist
-    let curve = value.curve;
+    let curve = value.curve
     if (curve != null) {
-      curve = easing.parseEasing(curve);
-      curve._parent = this;
+      curve = easing.parseEasing(curve)
+      curve._parent = this
     }
-    delete value.curve;
+    delete value.curve
 
     // parse start and end values
     const start = Object.keys(value)[0],
-      end = value[start];
+      end = value[start]
 
-    return { start,
-      end,
-      curve };
+    return { start, end, curve }
   }
 
   /*
@@ -491,45 +496,52 @@ class Deltas {
     @returns {object} Parsed color value.
   */
   _makeColorObj(color): Partial<Color> {
-
     // HEX
-    let colorObj = {};
+    let colorObj = {}
     if (color[0] === '#') {
-      const result = /^#?([a-f\d]{1,2})([a-f\d]{1,2})([a-f\d]{1,2})$/i.exec(color);
+      const result = /^#?([a-f\d]{1,2})([a-f\d]{1,2})([a-f\d]{1,2})$/i.exec(
+        color
+      )
       if (result) {
-        const r = (result[1].length === 2) ? result[1] : result[1] + result[1],
-          g = (result[2].length === 2) ? result[2] : result[2] + result[2],
-          b = (result[3].length === 2) ? result[3] : result[3] + result[3];
+        const r = result[1].length === 2 ? result[1] : result[1] + result[1],
+          g = result[2].length === 2 ? result[2] : result[2] + result[2],
+          b = result[3].length === 2 ? result[3] : result[3] + result[3]
 
         colorObj = {
           r: parseInt(r, 16),
           g: parseInt(g, 16),
           b: parseInt(b, 16),
-          a: 1,
-        };
+          a: 1
+        }
       }
     }
 
     // not HEX
     // shorthand color and rgb()
     if (color[0] !== '#') {
-      const isRgb = color[0] === 'r' && color[1] === 'g' && color[2] === 'b';
-      let rgbColor;
+      const isRgb = color[0] === 'r' && color[1] === 'g' && color[2] === 'b'
+      let rgbColor
 
       // rgb color
-      if (isRgb) { rgbColor = color; }
+      if (isRgb) {
+        rgbColor = color
+      }
 
       // shorthand color name
       if (!isRgb) {
         if (!this._shortColors[color]) {
-          h.div.style.color = color;
-          rgbColor = h.computedStyle(h.div).color;
-        } else { rgbColor = this._shortColors[color]; }
+          h.div.style.color = color
+          rgbColor = h.computedStyle(h.div).color
+        } else {
+          rgbColor = this._shortColors[color]
+        }
       }
 
       const regexString1 = '^rgba?\\((\\d{1,3}),\\s?(\\d{1,3}),'
       const regexString2 = '\\s?(\\d{1,3}),?\\s?(\\d{1}|0?\\.\\d{1,})?\\)$'
-      const result = new RegExp(regexString1 + regexString2, 'gi').exec(rgbColor)
+      const result = new RegExp(regexString1 + regexString2, 'gi').exec(
+        rgbColor
+      )
       const alphaValue = result && result[4] ? result[4] : 1
       const alpha = parseFloat(`${alphaValue}`)
 
@@ -538,12 +550,12 @@ class Deltas {
           r: parseInt(result[1], 10),
           g: parseInt(result[2], 10),
           b: parseInt(result[3], 10),
-          a: ((alpha != null) && !isNaN(alpha)) ? alpha : 1,
-        };
+          a: alpha != null && !isNaN(alpha) ? alpha : 1
+        }
       }
     }
 
-    return colorObj;
+    return colorObj
   }
 
   /*
@@ -553,21 +565,23 @@ class Deltas {
     @returns {Array} Parsed array.
   */
   _strToArr(string) {
-    const arr: any[] = [];
+    const arr: any[] = []
 
     // plain number
     if (typeof string === 'number' && !isNaN(string)) {
-      arr.push(h.parseUnit(string));
-      return arr;
+      arr.push(h.parseUnit(string))
+      return arr
     }
 
     // string array
-    string.trim().split(/\s+/gim).forEach((str) => {
-      arr.push(h.parseUnit(h.parseIfRand(str)));
-    });
-    return arr;
+    string
+      .trim()
+      .split(/\s+/gim)
+      .forEach((str) => {
+        arr.push(h.parseUnit(h.parseIfRand(str)))
+      })
+    return arr
   }
-
 }
 
-export default Deltas;
+export default Deltas

@@ -1,7 +1,7 @@
-import h from './h';
-import shapesMap from 'shapes/shapesMap';
-import Module from './module';
-import Tunable from './tunable';
+import h from './h'
+import Module from './module'
+import shapesMap from './shapes/shapesMap'
+import Tunable from './tunable'
 
 // TODO
 //  - refactor
@@ -17,10 +17,8 @@ class Shape extends Tunable {
     @private
   */
   _declareDefaults() {
-
     // DEFAULTS / APIs
     this._defaults = {
-
       // where to append the module to [selector, HTMLElement]
       parent: document.body,
 
@@ -135,8 +133,8 @@ class Shape extends Tunable {
       isWithShape: true,
 
       // context for all the callbacks
-      callbacksContext: this,
-    };
+      callbacksContext: this
+    }
   }
 
   /*
@@ -147,11 +145,11 @@ class Shape extends Tunable {
     @returns {object} this.
   */
   tune(o) {
-    super.tune(o);
+    super.tune(o)
 
     // update shapeModule's size to the max in `then` chain
-    this._getMaxSizeInChain();
-    return this;
+    this._getMaxSizeInChain()
+    return this
   }
 
   /*
@@ -162,13 +160,12 @@ class Shape extends Tunable {
     @returns  {object} this.
   */
   then(o) {
-
     // this._makeTimeline()
-    super.then(o);
+    super.then(o)
 
     // update shapeModule's size to the max in `then` chain
-    this._getMaxSizeInChain();
-    return this;
+    this._getMaxSizeInChain()
+    return this
   }
 
   // ^ PUBLIC  METHOD(S) ^
@@ -187,20 +184,19 @@ class Shape extends Tunable {
     @overrides Thenable
   */
   _vars() {
-
     // call _vars method on Thenable
-    super._vars();
-    this._lastSet = {};
+    super._vars()
+    this._lastSet = {}
 
     // save previous module in the chain
-    this._prevChainModule = this._o.prevChainModule;
+    this._prevChainModule = this._o.prevChainModule
 
     // should draw on foreign svg canvas
-    this.isForeign = !!this._o.ctx;
+    this.isForeign = !!this._o.ctx
 
     // this._o.isTimelineLess = true;
     // should take an svg element as self bit
-    return this.isForeignBit = !!this._o.shape;
+    return (this.isForeignBit = !!this._o.shape)
   }
 
   /*
@@ -210,41 +206,43 @@ class Shape extends Tunable {
   */
   _render() {
     if (!this._isRendered && !this._isChained) {
-
       // create `mojs` shape element
-      this.el = document.createElement('div');
+      this.el = document.createElement('div')
 
       // set name on the `el`
-      this.el.setAttribute('data-name', 'mojs-shape');
+      this.el.setAttribute('data-name', 'mojs-shape')
 
       // set class on the `el`
-      this.el.setAttribute('class', this._props.className);
+      this.el.setAttribute('class', this._props.className)
 
       // create shape module
-      this._createShape();
+      this._createShape()
 
       // append `el` to parent
-      this._props.parent.appendChild(this.el);
+      this._props.parent.appendChild(this.el)
 
       // set position styles on the el
-      this._setElStyles();
+      this._setElStyles()
 
       // set initial position for the first module in the chain
-      this._setProgress(0, 0);
+      this._setProgress(0, 0)
 
       // show at start if `isShowStart`
-      if (this._props.isShowStart) { this._show(); } else { this._hide(); }
+      if (this._props.isShowStart) {
+        this._show()
+      } else {
+        this._hide()
+      }
 
       // set `_isRendered` hatch
-      this._isRendered = true;
+      this._isRendered = true
     } else if (this._isChained) {
-
       // save elements from master module
-      this.el = this._masterModule.el;
-      this.shapeModule = this._masterModule.shapeModule;
+      this.el = this._masterModule.el
+      this.shapeModule = this._masterModule.shapeModule
     }
 
-    return this;
+    return this
   }
 
   /*
@@ -252,7 +250,9 @@ class Shape extends Tunable {
     @private
   */
   _setElStyles() {
-    if (!this.el) { return; }
+    if (!this.el) {
+      return
+    }
 
     // if (!this.isForeign) {
     const p = this._props
@@ -260,13 +260,13 @@ class Shape extends Tunable {
     const width = p.shapeWidth
     const height = p.shapeHeight
 
-    style.position = 'absolute';
-    this._setElSizeStyles(width, height);
+    style.position = 'absolute'
+    this._setElSizeStyles(width, height)
 
     if (p.isForce3d) {
-      let name = 'backface-visibility';
-      style[`${name}`] = 'hidden';
-      style[`${h.prefix.css}${name}`] = 'hidden';
+      const name = 'backface-visibility'
+      style[`${name}`] = 'hidden'
+      style[`${h.prefix.css}${name}`] = 'hidden'
     }
 
     // }
@@ -279,10 +279,10 @@ class Shape extends Tunable {
   */
   _setElSizeStyles(width, height) {
     const style = this.el.style
-    style.width = `${width}px`;
-    style.height = `${height}px`;
-    style['margin-left'] = `${-width / 2}px`;
-    style['margin-top'] = `${-height / 2}px`;
+    style.width = `${width}px`
+    style.height = `${height}px`
+    style['margin-left'] = `${-width / 2}px`
+    style['margin-top'] = `${-height / 2}px`
   }
 
   /*
@@ -290,7 +290,9 @@ class Shape extends Tunable {
     @private
   */
   _draw() {
-    if (!this.shapeModule) { return; }
+    if (!this.shapeModule) {
+      return
+    }
 
     const p = this._props
     const bP = this.shapeModule._props
@@ -298,23 +300,23 @@ class Shape extends Tunable {
     // set props on bit
     // bP.x                    = this._origin.x;
     // bP.y                    = this._origin.y;
-    bP.rx = p.rx;
-    bP.ry = p.ry;
-    bP.stroke = p.stroke;
-    bP['stroke-width'] = p.strokeWidth;
-    bP['stroke-opacity'] = p.strokeOpacity;
-    bP['stroke-dasharray'] = p.strokeDasharray;
-    bP['stroke-dashoffset'] = p.strokeDashoffset;
-    bP['stroke-linecap'] = p.strokeLinecap;
-    bP['fill'] = p.fill;
-    bP['fill-opacity'] = p.fillOpacity;
-    bP.radius = p.radius;
-    bP.radiusX = p.radiusX;
-    bP.radiusY = p.radiusY;
-    bP.points = p.points;
+    bP.rx = p.rx
+    bP.ry = p.ry
+    bP.stroke = p.stroke
+    bP['stroke-width'] = p.strokeWidth
+    bP['stroke-opacity'] = p.strokeOpacity
+    bP['stroke-dasharray'] = p.strokeDasharray
+    bP['stroke-dashoffset'] = p.strokeDashoffset
+    bP['stroke-linecap'] = p.strokeLinecap
+    bP['fill'] = p.fill
+    bP['fill-opacity'] = p.fillOpacity
+    bP.radius = p.radius
+    bP.radiusX = p.radiusX
+    bP.radiusY = p.radiusY
+    bP.points = p.points
 
-    this.shapeModule._draw();
-    this._drawEl();
+    this.shapeModule._draw()
+    this._drawEl()
   }
 
   /*
@@ -322,38 +324,39 @@ class Shape extends Tunable {
     @private
   */
   _drawEl() {
-
     // return;
-    if (this.el == null) { return true; }
+    if (this.el == null) {
+      return true
+    }
     const p = this._props
     const style = this.el.style
 
     // style.opacity = p.opacity;
-    this._isPropChanged('opacity') && (style.opacity = p.opacity);
+    this._isPropChanged('opacity') && (style.opacity = p.opacity)
     if (!this.isForeign) {
-      this._isPropChanged('left') && (style.left = p.left);
-      this._isPropChanged('top') && (style.top = p.top);
+      this._isPropChanged('left') && (style.left = p.left)
+      this._isPropChanged('top') && (style.top = p.top)
 
-      let isX = this._isPropChanged('x')
-      let isY = this._isPropChanged('y')
-      let isTranslate = isX || isY
-      let isScaleX = this._isPropChanged('scaleX')
-      let isScaleY = this._isPropChanged('scaleY')
+      const isX = this._isPropChanged('x')
+      const isY = this._isPropChanged('y')
+      const isTranslate = isX || isY
+      const isScaleX = this._isPropChanged('scaleX')
+      const isScaleY = this._isPropChanged('scaleY')
       let isScale = this._isPropChanged('scale')
-      let isRotate = this._isPropChanged('rotate')
+      const isRotate = this._isPropChanged('rotate')
 
-      isScale = isScale || isScaleX || isScaleY;
+      isScale = isScale || isScaleX || isScaleY
 
       if (isTranslate || isScale || isRotate) {
         const transform = this._fillTransform()
-        style[`${h.prefix.css}transform`] = transform;
-        style['transform'] = transform;
+        style[`${h.prefix.css}transform`] = transform
+        style['transform'] = transform
       }
 
       if (this._isPropChanged('origin') || this._deltas['origin']) {
         const origin = this._fillOrigin()
-        style[`${h.prefix.css}transform-origin`] = origin;
-        style['transform-origin'] = origin;
+        style[`${h.prefix.css}transform-origin`] = origin
+        style['transform-origin'] = origin
       }
     }
   }
@@ -365,13 +368,16 @@ class Shape extends Tunable {
     @returns {boolean}
   */
   _isPropChanged(name) {
-
     // if there is no record for the property - create it
-    if (this._lastSet[name] == null) { this._lastSet[name] = {}; }
+    if (this._lastSet[name] == null) {
+      this._lastSet[name] = {}
+    }
     if (this._lastSet[name].value !== this._props[name]) {
-      this._lastSet[name].value = this._props[name];
-      return true;
-    } else { return false; }
+      this._lastSet[name].value = this._props[name]
+      return true
+    } else {
+      return false
+    }
   }
 
   /*
@@ -381,15 +387,16 @@ class Shape extends Tunable {
     @param {object}  Option to tune on run.
   */
   _tuneNewOptions(o) {
-
     // call super on Module
-    super._tuneNewOptions(o);
+    super._tuneNewOptions(o)
 
     // return if empty object
-    if (!((o != null) && Object.keys(o).length)) { return 1; }
+    if (!(o != null && Object.keys(o).length)) {
+      return 1
+    }
 
     // this._calcSize();
-    this._setElStyles();
+    this._setElStyles()
   }
 
   /*
@@ -399,8 +406,8 @@ class Shape extends Tunable {
   */
   _getMaxRadius(name) {
     let selfSize
-    selfSize = this._getRadiusSize('radius');
-    return this._getRadiusSize(name, selfSize);
+    selfSize = this._getRadiusSize('radius')
+    return this._getRadiusSize(name, selfSize)
   }
 
   /*
@@ -415,11 +422,11 @@ class Shape extends Tunable {
     switch (isStringEasing && easing.toLowerCase()) {
       case 'elastic.out':
       case 'elastic.inout':
-        p.size *= 1.25;
-        break;
+        p.size *= 1.25
+        break
       case 'back.out':
       case 'back.inout':
-        p.size *= 1.1;
+        p.size *= 1.1
     }
   }
 
@@ -445,14 +452,14 @@ class Shape extends Tunable {
 
     // if value is delta value
     if (delta != null) {
-
       // get maximum number between start and end values of the delta
-      return Math.max(Math.abs(delta.end), Math.abs(delta.start));
+      return Math.max(Math.abs(delta.end), Math.abs(delta.start))
     } else if (this._props[name] != null) {
-
       // else get the value from props object
-      return parseFloat(this._props[name]);
-    } else { return fallback; }
+      return parseFloat(this._props[name])
+    } else {
+      return fallback
+    }
   }
 
   /*
@@ -466,13 +473,11 @@ class Shape extends Tunable {
     const stroke = this._getMaxStroke()
 
     // save shape `width` and `height` to `_props`
-    p.shapeWidth = (p.width != null)
-      ? p.width
-      : 2 * this._getMaxRadius('radiusX') + stroke;
+    p.shapeWidth =
+      p.width != null ? p.width : 2 * this._getMaxRadius('radiusX') + stroke
 
-    p.shapeHeight = (p.height != null)
-      ? p.height
-      : 2 * this._getMaxRadius('radiusY') + stroke;
+    p.shapeHeight =
+      p.height != null ? p.height : 2 * this._getMaxRadius('radiusY') + stroke
   }
 
   /*
@@ -480,12 +485,13 @@ class Shape extends Tunable {
     @private
   */
   _createShape() {
-
     // calculate max shape canvas size and set to _props
-    this._getShapeSize();
+    this._getShapeSize()
 
     // don't create actual shape if !`isWithShape`
-    if (!this._props.isWithShape) { return; }
+    if (!this._props.isWithShape) {
+      return
+    }
 
     const p = this._props
 
@@ -496,8 +502,8 @@ class Shape extends Tunable {
     this.shapeModule = new Shape({
       width: p.shapeWidth,
       height: p.shapeHeight,
-      parent: this.el,
-    });
+      parent: this.el
+    })
   }
 
   /*
@@ -506,16 +512,16 @@ class Shape extends Tunable {
   */
   _getMaxSizeInChain() {
     let maxW = 0,
-      maxH = 0;
+      maxH = 0
 
     for (let i = 0; i < this._modules.length; i++) {
-      this._modules[i]._getShapeSize();
-      maxW = Math.max(maxW, this._modules[i]._props.shapeWidth);
-      maxH = Math.max(maxH, this._modules[i]._props.shapeHeight);
+      this._modules[i]._getShapeSize()
+      maxW = Math.max(maxW, this._modules[i]._props.shapeWidth)
+      maxH = Math.max(maxH, this._modules[i]._props.shapeHeight)
     }
 
-    this.shapeModule && this.shapeModule._setSize(maxW, maxH);
-    this._setElSizeStyles(maxW, maxH);
+    this.shapeModule && this.shapeModule._setSize(maxW, maxH)
+    this._setElSizeStyles(maxW, maxH)
   }
 
   /*
@@ -525,9 +531,9 @@ class Shape extends Tunable {
   _getMaxStroke() {
     const p = this._props
     const dStroke = this._deltas['strokeWidth']
-    return (dStroke != null)
+    return dStroke != null
       ? Math.max(dStroke.start, dStroke.end)
-      : p.strokeWidth;
+      : p.strokeWidth
   }
 
   /*
@@ -538,15 +544,14 @@ class Shape extends Tunable {
     @param   {number}  Progress to set - [0..1].
   */
   _setProgress(easedProgress, progress) {
-
     // call the super on Module
-    Module.prototype._setProgress.call(this, easedProgress, progress);
+    Module.prototype._setProgress.call(this, easedProgress, progress)
 
     // draw current progress
 
     // TODO: check if easedProgress is required
     // this._draw(easedProgress);
-    this._draw();
+    this._draw()
   }
 
   /*
@@ -560,25 +565,39 @@ class Shape extends Tunable {
 
     // specify control functions for the module
     obj.callbackOverrides = {
-      onUpdate: function(ep, p) { return it._setProgress(ep, p); },
-      onStart: function(isFwd) {
-
+      onUpdate: function (ep, p) {
+        return it._setProgress(ep, p)
+      },
+      onStart: function (isFwd) {
         // don't touch main `el` onStart in chained elements
-        if (it._isChained) { return; }
-        if (isFwd) { it._show(); }
-        else { if (!p.isShowStart) { it._hide(); } }
+        if (it._isChained) {
+          return
+        }
+        if (isFwd) {
+          it._show()
+        } else {
+          if (!p.isShowStart) {
+            it._hide()
+          }
+        }
       },
-      onComplete: function(isFwd) {
-
+      onComplete: function (isFwd) {
         // don't touch main `el` if not the last in `then` chain
-        if (!it._isLastInChain()) { return; }
-        if (isFwd) { if (!p.isShowEnd) { it._hide(); } }
-        else { it._show(); }
+        if (!it._isLastInChain()) {
+          return
+        }
+        if (isFwd) {
+          if (!p.isShowEnd) {
+            it._hide()
+          }
+        } else {
+          it._show()
+        }
       },
-      onRefresh: function(isBefore) {
-        p.isRefreshState && isBefore && it._refreshBefore();
-      },
-    };
+      onRefresh: function (isBefore) {
+        p.isRefreshState && isBefore && it._refreshBefore()
+      }
+    }
   }
 
   /*
@@ -586,7 +605,9 @@ class Shape extends Tunable {
     @override @ Tweenable
     @private
   */
-  _transformTweenOptions() { this._applyCallbackOverrides(this._o); }
+  _transformTweenOptions() {
+    this._applyCallbackOverrides(this._o)
+  }
 
   /*
     Method to create transform string.
@@ -595,10 +616,10 @@ class Shape extends Tunable {
   */
   _fillTransform() {
     const p = this._props
-    const scaleX = (p.scaleX != null) ? p.scaleX : p.scale
-    const scaleY = (p.scaleY != null) ? p.scaleY : p.scale
+    const scaleX = p.scaleX != null ? p.scaleX : p.scale
+    const scaleY = p.scaleY != null ? p.scaleY : p.scale
     const scale = `${scaleX}, ${scaleY}`
-    return `translate(${p.x}, ${p.y}) rotate(${p.rotate}deg) scale(${scale})`;
+    return `translate(${p.x}, ${p.y}) rotate(${p.rotate}deg) scale(${scale})`
   }
 
   /*
@@ -607,12 +628,12 @@ class Shape extends Tunable {
     @returns {string} Transform string.
   */
   _fillOrigin() {
-    let p = this._props
+    const p = this._props
     let str = ''
     for (let i = 0; i < p.origin.length; i++) {
-      str += `${p.origin[i].string} `;
+      str += `${p.origin[i].string} `
     }
-    return str;
+    return str
   }
 
   /*
@@ -620,11 +641,14 @@ class Shape extends Tunable {
     @private
   */
   _refreshBefore() {
-
     // call setProgress with eased and normal progress
-    this._setProgress(this.tween._props.easing(0), 0);
+    this._setProgress(this.tween._props.easing(0), 0)
 
-    if (this._props.isShowStart) { this._show(); } else { this._hide(); }
+    if (this._props.isShowStart) {
+      this._show()
+    } else {
+      this._hide()
+    }
   }
 
   /*
@@ -634,13 +658,12 @@ class Shape extends Tunable {
     @overrides @ Module
   */
   _showByTransform() {
-
     // reset the cache of the scale prop
-    this._lastSet.scale = null;
+    this._lastSet.scale = null
 
     // draw el according to it's props
-    this._drawEl();
+    this._drawEl()
   }
 }
 
-export default Shape;
+export default Shape

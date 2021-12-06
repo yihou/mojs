@@ -3,35 +3,35 @@
 import cloneWith from 'lodash.clonewith'
 
 import mojs from './mojs'
-import {BaseDelta, ColorObject, PossibleUnit} from './types'
+import {BaseDelta, ColorObject, PossibleUnit, Unit} from './types'
 
 interface ColorDelta extends BaseDelta {
-  type: 'color',
-  name: string,
-  start: ColorObject,
-  end: ColorObject,
-  delta: ColorObject,
+  type: 'color'
+  name: string
+  start: ColorObject
+  end: ColorObject
+  delta: ColorObject
 }
 
 interface ArrayDelta extends BaseDelta {
-  type: 'array',
-  start: PossibleUnit[],
-  end: PossibleUnit[],
-  delta: PossibleUnit[],
+  type: 'array'
+  start: PossibleUnit[]
+  end: PossibleUnit[]
+  delta: PossibleUnit[]
 }
 
 interface UnitDelta extends BaseDelta {
-  type: 'unit',
-  start: PossibleUnit,
-  end: PossibleUnit,
-  delta: number,
+  type: 'unit'
+  start: PossibleUnit
+  end: PossibleUnit
+  delta: number
 }
 
 interface NumberDelta extends BaseDelta {
-  type: 'number',
-  start: number,
-  end: number,
-  delta: number,
+  type: 'number'
+  start: number
+  end: number
+  delta: number
 }
 
 type Delta = ColorDelta | ArrayDelta | UnitDelta | NumberDelta
@@ -72,7 +72,7 @@ export class Helpers {
   // @property   shortColors
   // @type       {object}
   // REMOVE WHEN ALL MODULES WILL USE DELTAS CLASS
-  shortColors = {
+  static shortColors = {
     transparent: 'rgba(0,0,0,0)',
     none: 'rgba(0,0,0,0)',
     aqua: 'rgb(0,255,255)',
@@ -91,7 +91,7 @@ export class Helpers {
     teal: 'rgb(0,128,128)',
     white: 'rgb(255,255,255)',
     yellow: 'rgb(255,255,0)',
-    orange: 'rgb(255,128,0)',
+    orange: 'rgb(255,128,0)'
   }
   // ---
   // none-tweenable props
@@ -108,7 +108,7 @@ export class Helpers {
     onPlaybackStart: 1,
     onPlaybackPause: 1,
     onPlaybackStop: 1,
-    onPlaybackComplete: 1,
+    onPlaybackComplete: 1
   }
   tweenOptionMap = {
     duration: 1,
@@ -120,7 +120,7 @@ export class Helpers {
     isYoyo: 1,
     shiftTime: 1,
     isReversed: 1,
-    callbacksContext: 1,
+    callbacksContext: 1
   }
   unitOptionMap = {
     left: 1,
@@ -128,7 +128,7 @@ export class Helpers {
     x: 1,
     y: 1,
     rx: 1,
-    ry: 1,
+    ry: 1
   }
   // strokeDashPropsMap:
   //   strokeDasharray:  1
@@ -136,18 +136,18 @@ export class Helpers {
   RAD_TO_DEG = 180 / Math.PI
   // DEG_TO_RAD: Math.PI/180
 
-  prefix
-  isFF
-  isIE
-  isOldOpera
-  isSafari
-  isChrome
-  isOpera
-  is3d
-  uniqIDs
+  prefix?: string
+  isFF = false
+  isIE = false
+  isOldOpera = false
+  isSafari = false
+  isChrome = false
+  isOpera = false
+  is3d = false
+  uniqIDs?: string
   div = document.createElement('div')
   defaultStyles
-  remBase
+  remBase?: number
 
   constructor() {
     this.vars()
@@ -167,8 +167,8 @@ export class Helpers {
     this.isSafari = ua.indexOf('Safari') > -1
     this.isChrome = ua.indexOf('Chrome') > -1
     this.isOpera = ua.toLowerCase().indexOf('op') > -1
-    this.isChrome && this.isSafari && (this.isSafari = false);
-    (ua.match(/PhantomJS/gim)) && (this.isSafari = false)
+    this.isChrome && this.isSafari && (this.isSafari = false)
+    ua.match(/PhantomJS/gim) && (this.isSafari = false)
     this.isChrome && this.isOpera && (this.isChrome = false)
     this.is3d = this.checkIf3d()
 
@@ -189,10 +189,10 @@ export class Helpers {
    * @return {object} new object
    */
   cloneObj<T extends Record<string, any>>(obj: T, exclude?) {
-    const excludeKeys = Object.keys(exclude || {});
+    const excludeKeys = Object.keys(exclude || {})
 
     return cloneWith(obj, function (value, key: string) {
-      const shouldExclude = !excludeKeys.some(excludeKey => excludeKey == key)
+      const shouldExclude = !excludeKeys.some((excludeKey) => excludeKey == key)
       if (shouldExclude) {
         return undefined
       }
@@ -220,7 +220,7 @@ export class Helpers {
   extend(objTo, objFrom) {
     return {
       ...objFrom,
-      ...objTo,
+      ...objTo
     }
   }
 
@@ -231,7 +231,11 @@ export class Helpers {
   }
 
   clamp(value: number | any, min: number | any, max: number | any) {
-    if (typeof value !== 'number' || typeof min !== 'number' || typeof max !== 'number') {
+    if (
+      typeof value !== 'number' ||
+      typeof min !== 'number' ||
+      typeof max !== 'number'
+    ) {
       return value
     }
 
@@ -245,7 +249,10 @@ export class Helpers {
   }
 
   setPrefixedStyle(el: HTMLElement, name: string, value: string) {
-    if (name === 'transform' && el.style[`${this.prefix.css}${name}`] === value) {
+    if (
+      name === 'transform' &&
+      el.style[`${this.prefix.css}${name}`] === value
+    ) {
       el.style[name] = value
     }
   }
@@ -262,13 +269,17 @@ export class Helpers {
    * @example
    *   h.style(el, { width: '20px', height: '10px' })
    */
-  style(element: HTMLElement, style: string | Partial<CSSStyleDeclaration>, value: any) {
+  style(
+    element: HTMLElement,
+    style: string | Partial<CSSStyleDeclaration>,
+    value: any
+  ) {
     if (typeof style === 'object') {
-      const keys = Object.keys(style);
+      const keys = Object.keys(style)
       let len = keys.length
 
       while (len--) {
-        const key = keys[len];
+        const key = keys[len]
         const value = style[key]
 
         this.setPrefixedStyle(element, key, value)
@@ -314,7 +325,7 @@ export class Helpers {
         unit: 'px',
         isStrict: false,
         value,
-        string: value === 0 ? `${value}` : `${value}px`,
+        string: value === 0 ? `${value}` : `${value}px`
       }
     } else if (typeof value === 'string') {
       const regex = /px|%|rem|em|ex|cm|ch|mm|in|pt|pc|vh|vw|vmin|deg/gim
@@ -330,7 +341,7 @@ export class Helpers {
         unit,
         isStrict,
         value: amount,
-        string: amount === 0 ? `${amount}` : `${amount}${unit}`,
+        string: amount === 0 ? `${amount}` : `${amount}${unit}`
       }
     }
 
@@ -342,29 +353,40 @@ export class Helpers {
     return func.bind(context)
   }
 
-  getRadialPoint(o: Partial<{ radiusX: number, radiusY: number, radius: number, rotate?: number, center: { x: number, y: number } }> = {}) {
+  getRadialPoint(
+    o: Partial<{
+      radiusX: number
+      radiusY: number
+      radius: number
+      rotate?: number
+      center: { x: number; y: number }
+    }> = {}
+  ) {
     // return if !o.radius? or !o.rotate? or !o.center?
     const radAngle = ((o.rotate || 0) - 90) * 0.017453292519943295 // Math.PI/180
     const radiusX = o.radiusX || o.radius || 0
     const radiusY = o.radiusY || o.radius || 0
-    const center = o.center || {x: 0, y: 0}
+    const center = o.center || { x: 0, y: 0 }
 
     return {
-      x: center.x + (Math.cos(radAngle) * radiusX),
-      y: center.y + (Math.sin(radAngle) * radiusY)
+      x: center.x + Math.cos(radAngle) * radiusX,
+      y: center.y + Math.sin(radAngle) * radiusY
     }
   }
 
   getPrefix() {
     const styles = window.getComputedStyle(document.documentElement, '')
-    const v = Array.prototype.slice.call(styles).join('').match(/-(moz|webkit|ms)-/)
+    const v = Array.prototype.slice
+      .call(styles)
+      .join('')
+      .match(/-(moz|webkit|ms)-/)
     let pre = v[1]
 
     if (!v && styles['OLink']) {
       pre = 'o'
     }
 
-    const domMatch = ('WebKit|Moz|MS|O').match(new RegExp('(' + pre + ')', 'i'))
+    const domMatch = 'WebKit|Moz|MS|O'.match(new RegExp('(' + pre + ')', 'i'))
     return {
       dom: domMatch ? domMatch[1] : undefined,
       lowercase: pre,
@@ -373,38 +395,45 @@ export class Helpers {
     }
   }
 
-  strToArr(string): PossibleUnit[] {
-    const arr: any[] = []
+  strToArr(string: string | number): PossibleUnit[] {
+    const arr: PossibleUnit[] = []
     // plain number
-    if ((typeof string === 'number') && !isNaN(string)) {
+    if (typeof string === 'number' && !isNaN(string)) {
       arr.push(this.parseUnit(string))
       return arr
     }
     // string array
-    string.trim().split(/\s+/gim).forEach(str => {
-      return arr.push(this.parseUnit(this.parseIfRand(str)))
-    })
+    (string as string)
+      .trim()
+      .split(/\s+/gim)
+      .forEach((str) => {
+        return arr.push(this.parseUnit(this.parseIfRand(str)))
+      })
     return arr
   }
 
-  calcArrDelta(arr1, arr2): PossibleUnit[] {
+  calcArrDelta(arr1: PossibleUnit[], arr2: PossibleUnit[]): PossibleUnit[] {
     if (!Array.isArray(arr1) || !Array.isArray(arr2)) {
       throw new Error('Two arrays should be passed')
     }
 
     const delta: PossibleUnit[] = []
     for (let i = 0; i < arr1.length; i++) {
-      delta[i] = this.parseUnit(`${arr2[i].value - arr1[i].value}${arr2[i].unit}`)
+      const arr1Item = arr1[i] as Unit
+      const arr2Item = arr2[i] as Unit
+      delta[i] = this.parseUnit(
+        `${(arr2Item?.value as number) - (arr1Item?.value as number)}${arr2Item.unit}`
+      )
     }
     return delta
   }
 
-  isArray(variable) {
+  isArray(variable: unknown) {
     console.warn('@deprecating isArray to use native isArray')
     return Array.isArray(variable)
   }
 
-  normDashArrays(arr1, arr2) {
+  normDashArrays(arr1: PossibleUnit[], arr2: PossibleUnit[]) {
     // if !arr1? or !arr2? then throw Error 'Two arrays should be passed'
     let currItem, i, lenDiff, startI
     const arr1Len = arr1.length
@@ -414,23 +443,31 @@ export class Helpers {
       let end
       lenDiff = arr1Len - arr2Len
       startI = arr2.length
-      for (i = 0, end = lenDiff, asc = 0 <= end; asc ? i < end : i > end; asc ? i++ : i--) {
+      for (
+        i = 0, end = lenDiff, asc = 0 <= end;
+        asc ? i < end : i > end;
+        asc ? i++ : i--
+      ) {
         currItem = i + startI
-        arr2.push(this.parseUnit(`0${arr1[currItem].unit}`))
+        arr2.push(this.parseUnit(`0${(arr1[currItem] as Unit).unit}`))
       }
     } else if (arr2Len > arr1Len) {
       let asc1, end1
       lenDiff = arr2Len - arr1Len
       startI = arr1.length
-      for (i = 0, end1 = lenDiff, asc1 = 0 <= end1; asc1 ? i < end1 : i > end1; asc1 ? i++ : i--) {
+      for (
+        i = 0, end1 = lenDiff, asc1 = 0 <= end1;
+        asc1 ? i < end1 : i > end1;
+        asc1 ? i++ : i--
+      ) {
         currItem = i + startI
-        arr1.push(this.parseUnit(`0${arr2[currItem].unit}`))
+        arr1.push(this.parseUnit(`0${(arr2[currItem] as Unit).unit}`))
       }
     }
     return [arr1, arr2]
   }
 
-  makeColorObj(color) {
+  makeColorObj(color: string) {
     // HEX
     let b, colorObj, g, r, result
     if (color[0] === '#') {
@@ -444,7 +481,7 @@ export class Helpers {
           r: parseInt(r, 16),
           g: parseInt(g, 16),
           b: parseInt(b, 16),
-          a: 1,
+          a: 1
         }
       }
     }
@@ -453,7 +490,7 @@ export class Helpers {
     // shorthand color and rgb()
     if (color[0] !== '#') {
       let rgbColor
-      const isRgb = (color[0] === 'r') && (color[1] === 'g') && (color[2] === 'b')
+      const isRgb = color[0] === 'r' && color[1] === 'g' && color[2] === 'b'
       // rgb color
       if (isRgb) {
         rgbColor = color
@@ -461,11 +498,11 @@ export class Helpers {
       // shorthand color name
       if (!isRgb) {
         rgbColor = (() => {
-          if (!this.shortColors[color]) {
+          if (!Helpers.shortColors[color as keyof typeof Helpers.shortColors]) {
             this.div.style.color = color
             return this.computedStyle(this.div).color
           } else {
-            return this.shortColors[color]
+            return Helpers.shortColors[color as keyof typeof Helpers.shortColors]
           }
         })()
       }
@@ -480,7 +517,7 @@ export class Helpers {
           r: parseInt(result[1], 10),
           g: parseInt(result[2], 10),
           b: parseInt(result[3], 10),
-          a: (alpha != null) && !isNaN(alpha) ? alpha : 1,
+          a: alpha != null && !isNaN(alpha) ? alpha : 1
         }
       }
     }
@@ -488,18 +525,18 @@ export class Helpers {
     return colorObj
   }
 
-  computedStyle(el) {
+  computedStyle(el: Element) {
     return getComputedStyle(el)
   }
 
-  capitalize(str) {
+  capitalize(str: unknown) {
     if (typeof str !== 'string') {
       throw Error('String expected - nothing to capitalize')
     }
     return str.charAt(0).toUpperCase() + str.substring(1)
   }
 
-  parseRand(string) {
+  parseRand(string: string) {
     const randArr = string.split(/rand\(|,|\)/)
     const units = this.parseUnit(randArr[2])
     const rand = this.rand(parseFloat(randArr[1]), parseFloat(randArr[2]))
@@ -541,10 +578,14 @@ export class Helpers {
     const unitValue = this.parseUnit(value)
 
     let unit = ''
-    if (base.isStrict) {
-      unit = base.unit
+    if ((base as Unit).isStrict) {
+      unit = (base as Unit).unit
     } else {
-      if (unitValue && typeof unitValue !== 'number' && typeof unitValue !== 'string') {
+      if (
+        unitValue &&
+        typeof unitValue !== 'number' &&
+        typeof unitValue !== 'string'
+      ) {
         unit = unitValue.isStrict ? unitValue.unit : ''
       }
     }
@@ -553,12 +594,13 @@ export class Helpers {
     // add units only if option had a unit before
     if (typeof unitValue === 'object') {
       if (typeof unitValue.value === 'number') {
-        number = (index * unitValue.value) + base.valueunitValue.value
+        const baseValue = (base as Unit).value as number
+        number = index * unitValue.value + baseValue
       } else if (typeof unitValue.value === 'string') {
-        number = (index * parseFloat(unitValue.value)) + base.valueunitValue.value
+        const baseValue = (base as Unit).value as number
+        number = index * parseFloat(unitValue.value) + baseValue
       }
     }
-
 
     if (unit) {
       return `${number}${unit}`
@@ -571,18 +613,17 @@ export class Helpers {
 
   // Method to parse stagger or return the passed value if
   // it has no stagger expression in it.
-  parseIfStagger(value, i) {
-    if (!((typeof value === 'string') && value.match(/stagger/g))) {
+  parseIfStagger(value: unknown, i: number) {
+    if (!(typeof value === 'string' && value.match(/stagger/g))) {
       return value
     } else {
       return this.parseStagger(value, i)
     }
   }
 
-
   // if passed string has rand function then get the rand value
-  parseIfRand(str) {
-    if ((typeof str === 'string') && str.match(/rand\(/)) {
+  parseIfRand(str: string | unknown) {
+    if (typeof str === 'string' && str.match(/rand\(/)) {
       return this.parseRand(str)
     } else {
       return str
@@ -590,33 +631,36 @@ export class Helpers {
   }
 
   // if delta object was passed: like { 20: 75 }
-  parseDelta(key, value, index) {
+  parseDelta(key: string, value, index) {
     // clone the delta object before proceed
     value = this.cloneObj(value)
     // parse delta easing
-    let {
-      easing,
-    } = value
+    let { easing } = value
     if (easing != null) {
       easing = mojs.easing.parseEasing(easing)
     }
     delete value.easing
     // parse delta curve
-    let {
-      curve,
-    } = value
+    let { curve } = value
     if (curve != null) {
       curve = mojs.easing.parseEasing(curve)
     }
     delete value.curve
 
-    let start: any = Object.keys(value)[0]
+    let start: unknown = Object.keys(value)[0]
     let end = value[start]
-    let delta: Delta = {start} as any
+    let delta: Delta = { start } as any
     // color values
-    if (isNaN(parseFloat(start)) && !start.match(/rand\(/) && !start.match(/stagger\(/)) {
+    if (
+      isNaN(parseFloat(start)) &&
+      !start.match(/rand\(/) &&
+      !start.match(/stagger\(/)
+    ) {
       if (key === 'strokeLinecap') {
-        this.warn(`Sorry, stroke-linecap property is not animatable yet, using the start(${start}) value instead`, value)
+        this.warn(
+          `Sorry, stroke-linecap property is not animatable yet, using the start(${start}) value instead`,
+          value
+        )
         // @props[key] = start;
         return delta
       }
@@ -633,11 +677,15 @@ export class Helpers {
           r: endColorObj.r - startColorObj.r,
           g: endColorObj.g - startColorObj.g,
           b: endColorObj.b - startColorObj.b,
-          a: endColorObj.a - startColorObj.a,
-        },
+          a: endColorObj.a - startColorObj.a
+        }
       }
       // color strokeDasharray/strokeDashoffset
-    } else if ((key === 'strokeDasharray') || (key === 'strokeDashoffset') || (key === 'origin')) {
+    } else if (
+      key === 'strokeDasharray' ||
+      key === 'strokeDashoffset' ||
+      key === 'origin'
+    ) {
       const startArr = this.strToArr(start)
       const endArr = this.strToArr(end)
       this.normDashArrays(startArr, endArr)
@@ -655,7 +703,7 @@ export class Helpers {
         end: endArr,
         delta: this.calcArrDelta(startArr, endArr),
         easing,
-        curve,
+        curve
       }
       //# plain numeric value ##
     } else {
@@ -676,7 +724,7 @@ export class Helpers {
             end,
             delta: end.value - (start.value as number),
             easing,
-            curve,
+            curve
           }
         } else {
           // not position but numeric values
@@ -689,7 +737,7 @@ export class Helpers {
             end,
             delta: end - start,
             easing,
-            curve,
+            curve
           }
         }
       }
@@ -700,38 +748,37 @@ export class Helpers {
   mergeUnits(start, end, key) {
     if (!end.isStrict && start.isStrict) {
       end.unit = start.unit
-      return end.string = `${end.value}${end.unit}`
+      return (end.string = `${end.value}${end.unit}`)
     } else if (end.isStrict && !start.isStrict) {
       start.unit = end.unit
-      return start.string = `${start.value}${start.unit}`
+      return (start.string = `${start.value}${start.unit}`)
     } else if (end.isStrict && start.isStrict) {
       if (end.unit !== start.unit) {
         start.unit = end.unit
         start.string = `${start.value}${start.unit}`
-        return this.warn(`Two different units were specified on \"${key}\" delta \
-property, mo · js will fallback to end \"${end.unit}\" unit `,
-        )
+        return this
+          .warn(`Two different units were specified on \"${key}\" delta \
+property, mo · js will fallback to end \"${end.unit}\" unit `)
       }
     }
   }
 
   rand(min, max) {
-    return (Math.random() * ((max) - min)) + min
+    return Math.random() * (max - min) + min
   }
 
   isDOM(o) {
-    if ((o == null)) {
+    if (o == null) {
       return false
     }
     // if typeof Node is 'function' then o instanceof Node
-    const isNode = (typeof o.nodeType === 'number') && (typeof o.nodeName === 'string')
-    return (typeof o === 'object') && isNode
+    const isNode =
+      typeof o.nodeType === 'number' && typeof o.nodeName === 'string'
+    return typeof o === 'object' && isNode
   }
 
   getChildElements(element) {
-    const {
-      childNodes,
-    } = element
+    const { childNodes } = element
     const children: HTMLElement[] = []
     let i = childNodes.length
     while (i--) {
@@ -745,12 +792,11 @@ property, mo · js will fallback to end \"${end.unit}\" unit `,
   delta(start, end) {
     const type1 = typeof start
     const type2 = typeof end
-    const isType1 = (type1 === 'string') || ((type1 === 'number') && !isNaN(start))
-    const isType2 = (type2 === 'string') || ((type2 === 'number') && !isNaN(end))
+    const isType1 = type1 === 'string' || (type1 === 'number' && !isNaN(start))
+    const isType2 = type2 === 'string' || (type2 === 'number' && !isNaN(end))
     if (!isType1 || !isType2) {
       this.error(`delta method expects Strings or Numbers at input \
-but got - ${start}, ${end}`,
-      )
+but got - ${start}, ${end}`)
       return
     }
     const obj = {}
@@ -805,11 +851,9 @@ but got - ${start}, ${end}`,
   checkIf3d() {
     const div = document.createElement('div')
     this.style(div, 'transform', 'translateZ(0)')
-    const {
-      style,
-    } = div
+    const { style } = div
     const prefixed = `${this.prefix.css}transform`
-    const tr = (style[prefixed] != null) ? style[prefixed] : style.transform
+    const tr = style[prefixed] != null ? style[prefixed] : style.transform
     return tr !== ''
   }
 
@@ -819,7 +863,7 @@ but got - ${start}, ${end}`,
     @returns {boolean} If variable is object.
   */
   isObject(variable) {
-    return (variable !== null) && (typeof variable === 'object')
+    return variable !== null && typeof variable === 'object'
   }
 
   /*
@@ -895,7 +939,7 @@ but got - ${start}, ${end}`,
     }
 
     if (el === null) {
-      h.error('Can\'t parse HTML element: ', el)
+      h.error("Can't parse HTML element: ", el)
     }
     return el
   }
@@ -920,9 +964,13 @@ but got - ${start}, ${end}`,
   isDelta(optionsValue) {
     let isObject = this.isObject(optionsValue)
     isObject = isObject && !optionsValue.unit
-    return !(!isObject || Array.isArray(optionsValue) || this.isDOM(optionsValue))
+    return !(
+      !isObject ||
+      Array.isArray(optionsValue) ||
+      this.isDOM(optionsValue)
+    )
   }
 }
 
-export const h = new Helpers
+export const h = new Helpers()
 export default h

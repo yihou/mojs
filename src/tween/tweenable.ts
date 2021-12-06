@@ -1,6 +1,7 @@
-import Tween from 'tween/tween';
-import Timeline from 'tween/timeline';
-import Module from '../module';
+import Timeline from './tween/timeline'
+import Tween from './tween/tween'
+
+import Module from '../module'
 
 /*
   Class to define a module ancestor
@@ -21,8 +22,8 @@ class Tweenable extends Module {
     @returns this.
   */
   play() {
-    this.timeline.play.apply(this.timeline, arguments);
-    return this;
+    this.timeline.play.apply(this.timeline, arguments)
+    return this
   }
 
   /*
@@ -32,8 +33,8 @@ class Tweenable extends Module {
     @returns this.
   */
   playBackward() {
-    this.timeline.playBackward.apply(this.timeline, arguments);
-    return this;
+    this.timeline.playBackward.apply(this.timeline, arguments)
+    return this
   }
 
   /*
@@ -42,8 +43,8 @@ class Tweenable extends Module {
     @returns this.
   */
   pause() {
-    this.timeline.pause.apply(this.timeline, arguments);
-    return this;
+    this.timeline.pause.apply(this.timeline, arguments)
+    return this
   }
 
   /*
@@ -55,8 +56,8 @@ class Tweenable extends Module {
     @returns this.
   */
   stop() {
-    this.timeline.stop.apply(this.timeline, arguments);
-    return this;
+    this.timeline.stop.apply(this.timeline, arguments)
+    return this
   }
 
   /*
@@ -65,8 +66,8 @@ class Tweenable extends Module {
     @returns this.
   */
   reset() {
-    this.timeline.reset.apply(this.timeline, arguments);
-    return this;
+    this.timeline.reset.apply(this.timeline, arguments)
+    return this
   }
 
   /*
@@ -75,8 +76,8 @@ class Tweenable extends Module {
     @returns this.
   */
   replay() {
-    this.timeline.replay.apply(this.timeline, arguments);
-    return this;
+    this.timeline.replay.apply(this.timeline, arguments)
+    return this
   }
 
   /*
@@ -85,8 +86,8 @@ class Tweenable extends Module {
     @returns this.
   */
   replayBackward() {
-    this.timeline.replayBackward.apply(this.timeline, arguments);
-    return this;
+    this.timeline.replayBackward.apply(this.timeline, arguments)
+    return this
   }
 
   /*
@@ -96,8 +97,8 @@ class Tweenable extends Module {
     @returns this.
   */
   resume() {
-    this.timeline.resume.apply(this.timeline, arguments);
-    return this;
+    this.timeline.resume.apply(this.timeline, arguments)
+    return this
   }
 
   /*
@@ -107,8 +108,8 @@ class Tweenable extends Module {
     @returns this.
   */
   setProgress() {
-    this.timeline.setProgress.apply(this.timeline, arguments);
-    return this;
+    this.timeline.setProgress.apply(this.timeline, arguments)
+    return this
   }
 
   /*
@@ -117,27 +118,26 @@ class Tweenable extends Module {
     @returns this.
   */
   setSpeed() {
-    this.timeline.setSpeed.apply(this.timeline, arguments);
-    return this;
+    this.timeline.setSpeed.apply(this.timeline, arguments)
+    return this
   }
 
   // ^ PUBLIC  METHOD(S) ^
   // v PRIVATE METHOD(S) v
 
   constructor(o = {}) {
-
     // super of Module
-    super(o);
+    super(o)
 
     // pipe function for _o object
     // before creating tween/timeline
-    this._transformTweenOptions();
+    this._transformTweenOptions()
 
     // make tween only if isTweenLess option is not set
-    !this._o.isTweenLess && this._makeTween();
+    !this._o.isTweenLess && this._makeTween()
 
     // make timeline only if isTimelineLess option is not set
-    !this._o.isTimelineLess && this._makeTimeline();
+    !this._o.isTimelineLess && this._makeTimeline()
   }
 
   /*
@@ -152,13 +152,12 @@ class Tweenable extends Module {
     @private
   */
   _makeTween() {
-
     // pass callbacks context
-    this._o.callbacksContext = this._o.callbacksContext || this;
-    this.tween = new Tween(this._o);
+    this._o.callbacksContext = this._o.callbacksContext || this
+    this.tween = new Tween(this._o)
 
     // make timeline property point to tween one is "no timeline" mode
-    (this._o.isTimelineLess) && (this.timeline = this.tween);
+    this._o.isTimelineLess && (this.timeline = this.tween)
   }
 
   /*
@@ -169,21 +168,20 @@ class Tweenable extends Module {
                     timeline options.
   */
   _makeTimeline() {
-
     // pass callbacks context
-    this._o.timeline = this._o.timeline || {};
-    this._o.timeline.callbacksContext = this._o.callbacksContext || this;
-    this.timeline = new Timeline(this._o.timeline);
+    this._o.timeline = this._o.timeline || {}
+    this._o.timeline.callbacksContext = this._o.callbacksContext || this
+    this.timeline = new Timeline(this._o.timeline)
 
     // set the flag to indicate that real timeline is present
-    this._isTimeline = true;
+    this._isTimeline = true
 
     // if tween exist - add it to the timeline there is some
     // modules like burst and stagger that have no tween
     if (this.tween && this.timeline) {
-      (this.timeline as Timeline).add(this.tween)
+      ;(this.timeline as Timeline).add(this.tween)
     }
   }
 }
 
-export default Tweenable;
+export default Tweenable

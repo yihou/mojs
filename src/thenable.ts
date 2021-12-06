@@ -1,6 +1,6 @@
-import h from './h';
-import Tweenable from 'tween/tweenable';
+import h from './h'
 import Timeline from './tween/timeline'
+import Tweenable from './tween/tweenable'
 
 /*
   The Thenable class adds .then public method and
@@ -9,7 +9,7 @@ import Timeline from './tween/timeline'
 class Thenable extends Tweenable {
   _masterModule?: Thenable = undefined
   _modules: Thenable[] = []
-  _isChained: boolean = false
+  _isChained = false
   _nonMergeProps: any
 
   _history: any[]
@@ -27,31 +27,32 @@ class Thenable extends Tweenable {
     @returns  {object} this.
   */
   then(o) {
-
     // return if nothing was passed
-    if ((o == null) || !Object.keys(o).length) { return 1; }
+    if (o == null || !Object.keys(o).length) {
+      return 1
+    }
 
     // merge then options with the current ones
     const prevRecord = this._history[this._history.length - 1]
     const merged = this._mergeThenOptions(prevRecord, o)
 
-    this._resetMergedFlags(merged);
+    this._resetMergedFlags(merged)
 
     // create a submodule of the same type as the master module
     const module = new Thenable(merged)
 
     // set `this` as master module of child module
-    module._masterModule = this;
+    module._masterModule = this
 
     // save the modules to the _modules array
-    this._modules.push(module);
+    this._modules.push(module)
 
     // add module's tween into master timeline
     if (this.timeline instanceof Timeline) {
-      this.timeline.append(module);
+      this.timeline.append(module)
     }
 
-    return this;
+    return this
   }
 
   // ^ PUBLIC  METHOD(S) ^
@@ -64,25 +65,24 @@ class Thenable extends Tweenable {
     @returns {object} Options object.
   */
   _resetMergedFlags(obj) {
-
     // set the submodule to be without timeline for perf reasons
-    obj.isTimelineLess = true;
+    obj.isTimelineLess = true
 
     // reset isShowStart flag for the submodules
-    obj.isShowStart = false;
+    obj.isShowStart = false
 
     // reset isRefreshState flag for the submodules
-    obj.isRefreshState = false;
+    obj.isRefreshState = false
 
     // set the submodule callbacks context
-    obj.callbacksContext = this._props.callbacksContext || this;
+    obj.callbacksContext = this._props.callbacksContext || this
 
     // set previous module
-    obj.prevChainModule = h.getLastItem(this._modules);
+    obj.prevChainModule = h.getLastItem(this._modules)
 
     // pass the `this` as master module
-    obj.masterModule = this;
-    return obj;
+    obj.masterModule = this
+    return obj
   }
 
   /*
@@ -91,32 +91,32 @@ class Thenable extends Tweenable {
   */
   _vars() {
     if (typeof super._vars === 'function') {
-      super._vars();
+      super._vars()
     }
 
     // save _master module
-    this._masterModule = this._o.masterModule;
+    this._masterModule = this._o.masterModule
 
     // set isChained flag based on prevChainModule option
-    this._isChained = !!this._masterModule;
+    this._isChained = !!this._masterModule
 
     // we are expect that the _o object
     // have been already extended by defaults
     const initialRecord = h.cloneObj(this._props)
-    for (let key in this._arrayPropertyMap) {
+    for (const key in this._arrayPropertyMap) {
       if (this._o[key]) {
         const preParsed = this._parsePreArrayProperty(key, this._o[key])
-        initialRecord[key] = preParsed;
+        initialRecord[key] = preParsed
       }
     }
 
-    this._history = [initialRecord];
+    this._history = [initialRecord]
 
     // the array holds all modules in the then chain
-    this._modules = [this];
+    this._modules = [this]
 
     // the props that to exclude from then merge
-    this._nonMergeProps = { shape: 1 };
+    this._nonMergeProps = { shape: 1 }
   }
 
   /*
@@ -128,10 +128,10 @@ class Thenable extends Tweenable {
   */
   _mergeThenOptions(start, end) {
     const o = {}
-    this._mergeStartLoop(o, start);
-    this._mergeEndLoop(o, start, end);
-    this._history.push(o);
-    return o;
+    this._mergeStartLoop(o, start)
+    this._mergeEndLoop(o, start, end)
+    this._history.push(o)
+    return o
   }
 
   /*
@@ -141,7 +141,9 @@ class Thenable extends Tweenable {
     @param {Any} Start property value.
     @returns {Any} Start property value.
   */
-  _checkStartValue(name, value) { return value; }
+  _checkStartValue(name, value) {
+    return value
+  }
 
   /*
     Originally part of the _mergeThenOptions.
@@ -150,22 +152,23 @@ class Thenable extends Tweenable {
     @parma {object} Start options object.
   */
   _mergeStartLoop(o, start) {
-
     // loop thru start options object
-    for (let key in start) {
+    for (const key in start) {
       const value = start[key]
-      if (start[key] == null) { continue; }
+      if (start[key] == null) {
+        continue
+      }
 
       // copy all values from start if not tween prop or duration
       if (!h.isTweenProp(key) || key === 'duration') {
-
         // if delta - copy only the end value
         if (this._isDelta(value)) {
-          o[key] = h.getDeltaEnd(value);
-        } else { o[key] = value; }
+          o[key] = h.getDeltaEnd(value)
+        } else {
+          o[key] = value
+        }
       }
     }
-
   }
 
   /*
@@ -176,35 +179,38 @@ class Thenable extends Tweenable {
     @parma {object} End options object.
   */
   _mergeEndLoop(o, start, end) {
-    for (let key in end) {
-
+    for (const key in end) {
       // just copy parent option
-      if (key == 'parent') { o[key] = end[key]; continue; }
+      if (key == 'parent') {
+        o[key] = end[key]
+        continue
+      }
 
       // get key/value of the end object
       // endKey - name of the property, endValue - value of the property
-      let endValue = end[key]
-      let startValue = (start[key] != null)
-        ? start[key] : this._defaults[key]
+      const endValue = end[key]
+      let startValue = start[key] != null ? start[key] : this._defaults[key]
 
-      startValue = this._checkStartValue(key, startValue);
-      if (endValue == null) { continue; }
+      startValue = this._checkStartValue(key, startValue)
+      if (endValue == null) {
+        continue
+      }
 
       // make ∆ of start -> end
       // if key name is radiusX/radiusY and
       // the startValue is not set fallback to radius value
-      let isSubRadius = (key === 'radiusX' || key === 'radiusY')
+      let isSubRadius = key === 'radiusX' || key === 'radiusY'
 
       if (isSubRadius && startValue == null) {
-        startValue = start.radius;
+        startValue = start.radius
       }
 
-      isSubRadius = (key === 'scaleX' || key === 'scaleY');
+      isSubRadius = key === 'scaleX' || key === 'scaleY'
       if (isSubRadius && startValue == null) {
-        startValue = start.scale;
+        startValue = start.scale
       }
 
-      o[key] = this._mergeThenProperty(key, startValue, endValue);
+      o[key] = this._mergeThenProperty(key, startValue, endValue)
     }
   }
 
@@ -216,45 +222,44 @@ class Thenable extends Tweenable {
     @param {Any}    End value of the property.
   */
   _mergeThenProperty(key, startValue, endValue) {
-
     // if isnt tween property
-    let isBoolean = typeof endValue === 'boolean'
+    const isBoolean = typeof endValue === 'boolean'
     let curve
     let easing
 
     if (!h.isTweenProp(key) && !this._nonMergeProps[key] && !isBoolean) {
-
       if (h.isObject(endValue) && endValue.to != null) {
-        curve = endValue.curve;
-        easing = endValue.easing;
-        endValue = endValue.to;
+        curve = endValue.curve
+        easing = endValue.easing
+        endValue = endValue.to
       }
 
       // if end value is delta - just save it
       if (this._isDelta(endValue)) {
-        return this._parseDeltaValues(key, endValue);
+        return this._parseDeltaValues(key, endValue)
       } else {
         const parsedEndValue = this._parsePreArrayProperty(key, endValue)
 
         // if end value is not delta - merge with start value
         if (this._isDelta(startValue)) {
-
           // if start value is delta - take the end value
           // as start value of the new delta
           return {
             [h.getDeltaEnd(startValue)]: parsedEndValue,
             easing,
-            curve,
-          };
+            curve
+          }
 
-        // if both start and end value are not ∆ - make ∆
-        } else { return { [startValue]: parsedEndValue,
-          easing,
-          curve }; }
+          // if both start and end value are not ∆ - make ∆
+        } else {
+          return { [startValue]: parsedEndValue, easing, curve }
+        }
       }
 
-    // copy the tween values unattended
-    } else { return endValue; }
+      // copy the tween values unattended
+    } else {
+      return endValue
+    }
   }
 
   /*
@@ -265,7 +270,7 @@ class Thenable extends Tweenable {
     @returns {number} Array length or -1 if not array.
   */
   _getArrayLength(arr) {
-    return (Array.isArray(arr) ? arr.length : -1);
+    return Array.isArray(arr) ? arr.length : -1
   }
 
   /*
@@ -276,8 +281,8 @@ class Thenable extends Tweenable {
   */
   _isDelta(optionsValue) {
     let isObject = h.isObject(optionsValue)
-    isObject = isObject && !optionsValue.unit;
-    return !(!isObject || Array.isArray(optionsValue) || h.isDOM(optionsValue));
+    isObject = isObject && !optionsValue.unit
+    return !(!isObject || Array.isArray(optionsValue) || h.isDOM(optionsValue))
   }
 
   /*
@@ -285,7 +290,9 @@ class Thenable extends Tweenable {
     @private
     @returns {boolean} If the module is the first in module chain.
   */
-  _isFirstInChain() { return !this._masterModule; }
+  _isFirstInChain() {
+    return !this._masterModule
+  }
 
   /*
     Method to check if the module is last in `then` chain.
@@ -293,16 +300,18 @@ class Thenable extends Tweenable {
     @returns {boolean} If the module is the last in module chain.
   */
   _isLastInChain() {
-    let master = this._masterModule;
+    const master = this._masterModule
 
     // if there is no master field - check the modules length
     // if module length is 1 thus there is no modules chain
     // it is the last one, otherwise it isnt
-    if (!master) { return (this._modules.length === 1); }
+    if (!master) {
+      return this._modules.length === 1
+    }
 
     // if there is master - check if it is the last item in _modules chain
-    return (this === h.getLastItem(master._modules));
+    return this === h.getLastItem(master._modules)
   }
 }
 
-export default Thenable;
+export default Thenable
