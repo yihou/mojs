@@ -1,127 +1,33 @@
 {
-  "env": {
-    "node": true,
-    "browser": true,
-    "es2021": true
-  },
-  "extends": "eslint:recommended",
-  "globals": {
-    "build": false
-  },
-  "parserOptions": {
-    "sourceType": "module"
-  },
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": { "project": "./tsconfig.json" },
+  "env": { "es6": true },
+  "ignorePatterns": ["node_modules", "build", "coverage"],
+  "plugins": ["import", "eslint-comments", "functional"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:eslint-comments/recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/typescript",
+    "prettier",
+    "prettier/@typescript-eslint"
+  ],
+  "globals": { "BigInt": true, "console": true, "WebAssembly": true },
   "rules": {
-    "array-bracket-spacing": [
-      "error"
-    ],
-    "arrow-spacing": [
-      "error"
-    ],
-    "comma-dangle": [
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "eslint-comments/disable-enable-pair": [
       "error",
-      "always-multiline"
+      { "allowWholeFile": true }
     ],
-    "comma-spacing": [
-      "error", {
-        "before": false,
-        "after": true
-      }
-    ],
-    "computed-property-spacing": [
-      "error"
-    ],
-    "func-call-spacing": [
-      "error"
-    ],
-    "indent": [
+    "eslint-comments/no-unused-disable": "error",
+    "import/order": [
       "error",
-      2, {
-        "SwitchCase": 1
-      }
+      { "newlines-between": "always", "alphabetize": { "order": "asc" } }
     ],
-    "key-spacing": [
-      "error"
-    ],
-    "keyword-spacing": [
-      "error"
-    ],
-    "lines-around-comment": [
-      "error", {
-        "beforeBlockComment": true
-      }
-    ],
-    "linebreak-style": [
+    "sort-imports": [
       "error",
-      "unix"
-    ],
-    "no-invalid-this": [
-      "error"
-    ],
-    "no-multi-spaces": [
-      "error"
-    ],
-    "no-multiple-empty-lines": [
-      "error", {
-        "max": 1
-      }
-    ],
-    "no-trailing-spaces": [
-      "error"
-    ],
-    "no-whitespace-before-property": [
-      "error"
-    ],
-    "object-curly-spacing": [
-      "error",
-      "always"
-    ],
-    "object-property-newline": [
-      "error"
-    ],
-    "quotes": [
-      "error",
-      "single"
-    ],
-    "rest-spread-spacing": [
-      "error"
-    ],
-    "semi": [
-      "error",
-      "always"
-    ],
-    "semi-spacing": [
-      "error"
-    ],
-    "space-before-blocks": [
-      "error"
-    ],
-    "space-before-function-paren": [
-      "error",
-      "never"
-    ],
-    "space-in-parens": [
-      "error"
-    ],
-    "space-infix-ops": [
-      "error"
-    ],
-    "space-unary-ops": [
-      "error"
-    ],
-    "spaced-comment": [
-      "error",
-      "always", {
-        "block": {
-          "balanced": true
-        }
-      }
-    ],
-    "strict": [
-      "error"
-    ],
-    "template-curly-spacing": [
-      "error"
+      { "ignoreDeclarationSort": true, "ignoreCase": true }
     ]
   }
 }
