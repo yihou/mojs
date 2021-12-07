@@ -16,7 +16,7 @@ import resize from 'any-resize-event'
 import h from './h'
 import { default as Timeline } from './tween/timeline'
 import { default as Tween } from './tween/tween'
-
+import {PossibleUnit} from './types'
 
 interface ContainerSize {
   width: number
@@ -311,7 +311,7 @@ class MotionPath {
   startLen: number
   fill: number
   container
-  fillRule
+  fillRule: 'all' | 'width' | 'height'
   filterID: string
   filter: Element | null
   filterOffset: Element | null
@@ -379,10 +379,10 @@ class MotionPath {
     }
 
     // get point on line between start end end
-    let curvatureX = h.parseUnit(curvature.x)
+    let curvatureX = h.parseUnit(curvature.x) as PossibleUnit
     if (typeof curvatureX === 'object') {
       curvatureX =
-        curvatureX.unit === '%' ? curvatureX.value * percent : curvatureX.value
+        curvatureX.unit === '%' ? (curvatureX.value as number) * percent : curvatureX.value
     }
 
     const curveXPoint = h.getRadialPoint({
@@ -399,7 +399,7 @@ class MotionPath {
 
     if (typeof curvatureY === 'object') {
       curvatureY =
-        curvatureY.unit === '%' ? curvatureY.value * percent : curvatureY.value
+        curvatureY.unit === '%' ? (curvatureY.value as number) * percent : curvatureY.value
     }
 
     const curvePoint = h.getRadialPoint({
@@ -551,9 +551,6 @@ DOMNode or another module.`)
     }
 
     switch (this.fillRule) {
-      case 'all':
-        this.calcWidth(size)
-        return this.calcHeight(size)
       case 'width':
         this.calcWidth(size)
         // noinspection JSSuspiciousNameCombination
@@ -562,6 +559,10 @@ DOMNode or another module.`)
         this.calcHeight(size)
         // noinspection JSSuspiciousNameCombination
         return (this.scaler.x = this.scaler.y)
+      case 'all':
+      default:
+        this.calcWidth(size)
+        return this.calcHeight(size)
     }
   }
 
@@ -791,7 +792,6 @@ DOMNode or another module.`)
       const result = []
       for (const key in o) {
         const value = o[key]
-        // @ts-ignore
         result.push((this[key] = value))
       }
       return result
@@ -803,7 +803,6 @@ DOMNode or another module.`)
       const result = []
       for (const key in o) {
         const value = o[key]
-        // @ts-ignore
         result.push((this.props[key] = value))
       }
       return result
@@ -846,6 +845,7 @@ DOMNode or another module.`)
       }
     }
     this.history.push(o)
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const it = this
     opts.onUpdate = (p) => this.setProgress(p)
     opts.onStart = () => this.props.onStart?.apply(this)

@@ -1,6 +1,6 @@
 import h from './h'
 import Module from './module'
-import shapesMap from './shapes/shapesMap'
+import shapesMap from './shapes/shapes-map'
 import Tunable from './tunable'
 
 // TODO
@@ -319,14 +319,14 @@ class Shape extends Tunable {
     this._drawEl()
   }
 
-  /*
+  /**
     Method to set current modules props to main div el.
     @private
   */
   _drawEl() {
     // return;
     if (this.el == null) {
-      return true
+      return
     }
     const p = this._props
     const style = this.el.style
@@ -386,7 +386,7 @@ class Shape extends Tunable {
     @override @ Module
     @param {object}  Option to tune on run.
   */
-  _tuneNewOptions(o) {
+  _tuneNewOptions(o): void | undefined | number {
     // call super on Module
     super._tuneNewOptions(o)
 
@@ -405,8 +405,7 @@ class Shape extends Tunable {
     @param {string} Radius name.
   */
   _getMaxRadius(name) {
-    let selfSize
-    selfSize = this._getRadiusSize('radius')
+    const selfSize = this._getRadiusSize('radius')
     return this._getRadiusSize(name, selfSize)
   }
 
@@ -447,7 +446,7 @@ class Shape extends Tunable {
       @param @optional fallback {number}  Optional number to set if there
                                           is no value for the key.
   */
-  _getRadiusSize(name, fallback = 0) {
+  _getRadiusSize(name, fallback = 0): number {
     const delta = this._deltas[name]
 
     // if value is delta value
@@ -560,6 +559,7 @@ class Shape extends Tunable {
     @param {object} Object to add the overrides to.
   */
   _applyCallbackOverrides(obj) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const it = this
     const p = this._props
 

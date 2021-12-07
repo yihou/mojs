@@ -1,7 +1,7 @@
-import Timeline from './tween/timeline'
-import Tween from './tween/tween'
-
 import Module from '../module'
+
+import Timeline from './timeline'
+import Tween from './tween'
 
 /*
   Class to define a module ancestor
@@ -21,8 +21,8 @@ class Tweenable extends Module {
     @param {number} Time shift.
     @returns this.
   */
-  play() {
-    this.timeline.play.apply(this.timeline, arguments)
+  play(shift?) {
+    this.timeline.play(shift)
     return this
   }
 
@@ -32,8 +32,8 @@ class Tweenable extends Module {
     @param {number} Time shift.
     @returns this.
   */
-  playBackward() {
-    this.timeline.playBackward.apply(this.timeline, arguments)
+  playBackward(shift?) {
+    this.timeline.playBackward(shift)
     return this
   }
 
@@ -43,7 +43,7 @@ class Tweenable extends Module {
     @returns this.
   */
   pause() {
-    this.timeline.pause.apply(this.timeline, arguments)
+    this.timeline.pause()
     return this
   }
 
@@ -52,11 +52,11 @@ class Tweenable extends Module {
     @public
     @param {number} [0...1] Progress to set on stop.
                             *Default* is `0` if `play`
-                            and `1` if `playBAckward`.
+                            and `1` if `playBackward`.
     @returns this.
   */
-  stop() {
-    this.timeline.stop.apply(this.timeline, arguments)
+  stop(progress) {
+    this.timeline.stop(progress)
     return this
   }
 
@@ -66,7 +66,7 @@ class Tweenable extends Module {
     @returns this.
   */
   reset() {
-    this.timeline.reset.apply(this.timeline, arguments)
+    this.timeline.reset()
     return this
   }
 
@@ -75,8 +75,8 @@ class Tweenable extends Module {
     @public
     @returns this.
   */
-  replay() {
-    this.timeline.replay.apply(this.timeline, arguments)
+  replay(shift?) {
+    this.timeline.replay(shift)
     return this
   }
 
@@ -85,8 +85,8 @@ class Tweenable extends Module {
     @public
     @returns this.
   */
-  replayBackward() {
-    this.timeline.replayBackward.apply(this.timeline, arguments)
+  replayBackward(shift?) {
+    this.timeline.replayBackward(shift)
     return this
   }
 
@@ -96,8 +96,8 @@ class Tweenable extends Module {
     @param {number} Time shift.
     @returns this.
   */
-  resume() {
-    this.timeline.resume.apply(this.timeline, arguments)
+  resume(shift?) {
+    this.timeline.resume(shift)
     return this
   }
 
@@ -107,8 +107,8 @@ class Tweenable extends Module {
     @param {number} [0...1] Progress value.
     @returns this.
   */
-  setProgress() {
-    this.timeline.setProgress.apply(this.timeline, arguments)
+  setProgress(progress: number) {
+    this.timeline.setProgress(progress)
     return this
   }
 
@@ -117,8 +117,8 @@ class Tweenable extends Module {
     @param {number} Speed value.
     @returns this.
   */
-  setSpeed() {
-    this.timeline.setSpeed.apply(this.timeline, arguments)
+  setSpeed(speed) {
+    this.timeline.setSpeed(speed)
     return this
   }
 
@@ -141,7 +141,7 @@ class Tweenable extends Module {
   }
 
   /*
-    Placeholder method that should be overrided
+    Placeholder method that should be overridden
     and will be called before tween/timeline creation.
     @private
   */

@@ -141,7 +141,7 @@ class Thenable extends Tweenable {
     @param {Any} Start property value.
     @returns {Any} Start property value.
   */
-  _checkStartValue(name, value) {
+  _checkStartValue(_name, value) {
     return value
   }
 

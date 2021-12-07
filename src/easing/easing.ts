@@ -302,7 +302,7 @@ export class Easing {
       if (easing.charAt(0).toLowerCase() === 'm') {
         return this.path(easing)
       } else {
-        easing = this._splitEasing(easing)
+        easing = this._splitEasing(easing) as number[]
         const easingParent = this[easing[0]]
         if (!easingParent) {
           h.error(
@@ -329,7 +329,7 @@ export class Easing {
   // @param {string} easing name. All easing names can be found
   //                 at [easing module](easing.coffee.html) page.
   // @return {Array}
-  _splitEasing(string: string | (() => string[]) | number) {
+  _splitEasing(string: string | (() => string[]) | number): string[] | unknown {
     if (typeof string === 'function') {
       return string
     }

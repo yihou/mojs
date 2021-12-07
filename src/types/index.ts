@@ -24,8 +24,42 @@ export interface ColorObject {
   a: number
 }
 
+export interface Prefix {
+  dom?: string
+  lowercase: string
+  css: string
+  js: string
+}
+
 export interface BaseDelta {
+  type: string
   name: string
-  easing: Easing
+  easing?: Easing
   curve: Curve
 }
+
+export interface ColorDelta extends BaseDelta {
+  start: ColorObject
+  end: ColorObject
+  delta: ColorObject
+}
+
+export interface ArrayDelta extends BaseDelta {
+  start: PossibleUnit[]
+  end: PossibleUnit[]
+  delta: PossibleUnit[]
+}
+
+export interface UnitDelta extends BaseDelta {
+  start: PossibleUnit
+  end: PossibleUnit
+  delta: number
+}
+
+export interface NumberDelta extends BaseDelta {
+  start: number
+  end: number
+  delta: number
+}
+
+export type DeltaType = ColorDelta | ArrayDelta | UnitDelta | NumberDelta

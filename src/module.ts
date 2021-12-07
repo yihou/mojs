@@ -1,4 +1,5 @@
 import h from './h'
+import {Unit} from './types'
 
 /*
   Base class for module. Extends and parses defaults.
@@ -179,7 +180,7 @@ export class Module {
   /**
    * Method to parse strokeDash.. option.
    * @param {string} key Property name.
-   * @param {any}    value Property value.
+   * @param {any} value Property value.
    * @returns {string} Parsed options value.
    */
   _parseStrokeDashOption(key, value) {
@@ -188,14 +189,16 @@ export class Module {
     // parse numeric/percent values for strokeDash.. properties
     if (this._arrayPropertyMap[key]) {
       result = []
+      let strArray: string[]
+
       switch (typeof value) {
         case 'number':
           result.push(h.parseUnit(value))
           break
         case 'string':
-          const array = value.split(' ')
-          for (let i = 0; i < array.length; i++) {
-            result.push(h.parseUnit(array[i]))
+          strArray = value.split(' ')
+          for (let i = 0; i < strArray.length; i++) {
+            result.push(h.parseUnit(strArray[i]))
           }
           break
       }
@@ -223,7 +226,6 @@ export class Module {
     @param {object} optionsValue Option value to get the delta for.
   */
   _getDelta(key, optionsValue) {
-    let delta
     if ((key === 'left' || key === 'top') && !this._o.ctx) {
       h.warn(
         `Consider to animate x/y properties instead of left/top,
@@ -239,7 +241,7 @@ export class Module {
     }
 
     // get delta
-    delta = h.parseDelta(key, optionsValue, this._index)
+    const delta = h.parseDelta(key, optionsValue, this._index)
 
     // if successfully parsed - save it
     if (delta.type != null) {
@@ -248,10 +250,11 @@ export class Module {
 
     let deltaEnd
     if (typeof delta.end === 'object') {
-      if (delta.end.value === 0) {
+      const endUnit: Unit = delta.end as Unit
+      if (endUnit.value === 0) {
         deltaEnd = 0
       } else {
-        deltaEnd = delta.end.string
+        deltaEnd = endUnit.string
       }
     } else {
       deltaEnd = delta.end
@@ -478,12 +481,14 @@ export class Module {
   }
 
   /**
-    Method to calculate current progress and probably draw it in children.
-    @private
-    @param {number} easedProgress Eased progress to set - [0..1].
-    @param {number} progress Progress to set - [0..1].
-  */
-  _setProgress(easedProgress, progress) {
+   * Method to calculate current progress and probably draw it in children.
+   * @private
+   * @param {number} easedProgress Eased progress to set - [0..1].
+   * @param {number} progress Progress to set - [0..1].
+   * @param _isYoyo
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _setProgress(easedProgress, progress, _isYoyo?) {
     this._progress = easedProgress
     this._calcCurrentProps(easedProgress, progress)
   }

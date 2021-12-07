@@ -3,38 +3,7 @@
 import cloneWith from 'lodash.clonewith'
 
 import mojs from './mojs'
-import {BaseDelta, ColorObject, PossibleUnit, Unit} from './types'
-
-interface ColorDelta extends BaseDelta {
-  type: 'color'
-  name: string
-  start: ColorObject
-  end: ColorObject
-  delta: ColorObject
-}
-
-interface ArrayDelta extends BaseDelta {
-  type: 'array'
-  start: PossibleUnit[]
-  end: PossibleUnit[]
-  delta: PossibleUnit[]
-}
-
-interface UnitDelta extends BaseDelta {
-  type: 'unit'
-  start: PossibleUnit
-  end: PossibleUnit
-  delta: number
-}
-
-interface NumberDelta extends BaseDelta {
-  type: 'number'
-  start: number
-  end: number
-  delta: number
-}
-
-type Delta = ColorDelta | ArrayDelta | UnitDelta | NumberDelta
+import {DeltaType, PossibleUnit, Prefix, Unit} from './types'
 
 /*
  * decaffeinate suggestions:
@@ -136,7 +105,7 @@ export class Helpers {
   RAD_TO_DEG = 180 / Math.PI
   // DEG_TO_RAD: Math.PI/180
 
-  prefix?: string
+  prefix?: Prefix
   isFF = false
   isIE = false
   isOldOpera = false
@@ -144,7 +113,7 @@ export class Helpers {
   isChrome = false
   isOpera = false
   is3d = false
-  uniqIDs?: string
+  uniqIDs?: number
   div = document.createElement('div')
   defaultStyles
   remBase?: number
@@ -163,7 +132,7 @@ export class Helpers {
     this.isFF = this.prefix.lowercase === 'moz'
     this.isIE = this.prefix.lowercase === 'ms'
     const ua = navigator.userAgent
-    this.isOldOpera = ua.match(/presto/gim)
+    this.isOldOpera = !!ua.match(/presto/gim)
     this.isSafari = ua.indexOf('Safari') > -1
     this.isChrome = ua.indexOf('Chrome') > -1
     this.isOpera = ua.toLowerCase().indexOf('op') > -1
@@ -375,14 +344,14 @@ export class Helpers {
   }
 
   getPrefix() {
-    const styles = window.getComputedStyle(document.documentElement, '')
+    const styles: CSSStyleDeclaration = window.getComputedStyle(document.documentElement, '')
     const v = Array.prototype.slice
       .call(styles)
       .join('')
-      .match(/-(moz|webkit|ms)-/)
+      .match(/-(moz|webkit|ms)-/) as string[]
     let pre = v[1]
 
-    if (!v && styles['OLink']) {
+    if (!v && (styles as any)['OLink']) {
       pre = 'o'
     }
 
@@ -647,9 +616,9 @@ export class Helpers {
     }
     delete value.curve
 
-    let start: unknown = Object.keys(value)[0]
+    let start: PossibleUnit = Object.keys(value)[0]
     let end = value[start]
-    let delta: Delta = { start } as any
+    let delta: DeltaType = { start } as any
     // color values
     if (
       isNaN(parseFloat(start)) &&
@@ -686,7 +655,7 @@ export class Helpers {
       key === 'strokeDashoffset' ||
       key === 'origin'
     ) {
-      const startArr = this.strToArr(start)
+      const startArr = this.strToArr(start) as string[]
       const endArr = this.strToArr(end)
       this.normDashArrays(startArr, endArr)
 
@@ -715,7 +684,7 @@ export class Helpers {
         // position values defined in unitOptionMap
         if (this.unitOptionMap[key]) {
           end = this.parseUnit(this.parseStringOption(end, index))
-          start = this.parseUnit(this.parseStringOption(start, index))
+          start = this.parseUnit(this.parseStringOption(start, index)) as Unit
           this.mergeUnits(start, end, key)
           delta = {
             type: 'unit',
@@ -757,8 +726,7 @@ export class Helpers {
         start.unit = end.unit
         start.string = `${start.value}${start.unit}`
         return this
-          .warn(`Two different units were specified on \"${key}\" delta \
-property, mo · js will fallback to end \"${end.unit}\" unit `)
+          .warn(`Two different units were specified on "${key}" delta property, mo · js will fallback to end "${end.unit}" unit `)
       }
     }
   }
@@ -795,9 +763,8 @@ property, mo · js will fallback to end \"${end.unit}\" unit `)
     const isType1 = type1 === 'string' || (type1 === 'number' && !isNaN(start))
     const isType2 = type2 === 'string' || (type2 === 'number' && !isNaN(end))
     if (!isType1 || !isType2) {
-      this.error(`delta method expects Strings or Numbers at input \
-but got - ${start}, ${end}`)
-      return
+      this.error(`delta method expects Strings or Numbers at input but got - ${start}, ${end}`)
+      return undefined
     }
     const obj = {}
     obj[start] = end

@@ -237,10 +237,12 @@ class PathEasing {
    * @param  {object} point bound point (start or end)
    * @return {Number, Undefined} returns Y value if true, undefined if false
    */
-  _checkIfPointCloseEnough(p, point) {
+  _checkIfPointCloseEnough(p, point): number | undefined {
     if (h.closeEnough(p, point.x / this._rect, this._eps)) {
       return this._resolveY(point)
     }
+
+    return undefined
   }
 
   /**
@@ -286,7 +288,7 @@ class PathEasing {
         p < x
           ? [p, start, newPoint, approximateMax]
           : [p, newPoint, end, approximateMax]
-      return this._findApproximate.apply(this, args)
+      return this._findApproximate(args[0], args[1], args[2], args[3])
     }
   }
 
@@ -307,7 +309,6 @@ class PathEasing {
    */
   _normalizePath(path) {
     // SVG path commands
-    let normalizedPath
     const svgCommandsRegexp = /[M|LHVCSQTA]/gim
     const points = path.split(svgCommandsRegexp)
     // remove the first empty item - it is always
@@ -324,7 +325,7 @@ class PathEasing {
       this._rect || 100
     )
 
-    normalizedPath = this._joinNormalizedPath(commands, points)
+    const normalizedPath = this._joinNormalizedPath(commands, points)
     // form the normalized path
     return normalizedPath
   }
@@ -335,7 +336,7 @@ class PathEasing {
    * @param {any[]} points Points array.
    * @return {string} Formed normalized path.
    */
-  _joinNormalizedPath(commands, points) {
+  _joinNormalizedPath(commands, points): string {
     let normalizedPath = ''
     for (let i = 0; i < commands.length; i++) {
       const command = commands[i]
@@ -358,7 +359,7 @@ class PathEasing {
       value = 0
     }
     segment = segment.trim()
-    const nRgx = /([-+])?((\d+(\.(\d|\e([-+])?)+)?)|(\.?(\d|\e|([-+]))+))/gim
+    const nRgx = /([-+])?((\d+(\.(\d|e([-+])?)+)?)|(\.?(\d|e|([-+]))+))/gim
     const pairs = this._getSegmentPairs(segment.match(nRgx))
     // get x value of the latest point
     const lastPoint = pairs[pairs.length - 1]

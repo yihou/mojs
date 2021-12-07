@@ -468,40 +468,39 @@ class Html extends Thenable {
     @param {object} Object to add overrides on.
   */
   _addCallbackOverrides(o) {
-    const it = this
     const p = this._props
     o.callbackOverrides = {
       onUpdate: this._draw,
       onRefresh: this._props.isRefreshState ? this._draw : void 0,
-      onStart: function (isFwd) {
+      onStart: (isFwd) => {
         // don't touch main `el` onStart in chained elements
-        if (it._isChained) {
+        if (this._isChained) {
           return
         }
 
         // show if was hidden at start
         if (isFwd && !p.isShowStart) {
-          it._show()
+          this._show()
         }
 
         // hide if should be hidden at start
         else {
           if (!p.isShowStart) {
-            it._hide()
+            this._hide()
           }
         }
       },
-      onComplete: function (isFwd) {
+      onComplete: (isFwd) => {
         // don't touch main `el` if not the last in `then` chain
-        if (it._isChained) {
+        if (this._isChained) {
           return
         }
         if (isFwd) {
           if (!p.isShowEnd) {
-            it._hide()
+            this._hide()
           }
         } else if (!p.isShowEnd) {
-          it._show()
+          this._show()
         }
       }
     }

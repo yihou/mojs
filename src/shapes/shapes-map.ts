@@ -34,19 +34,21 @@ class ShapesMap {
   }
 
   getShape(name) {
-    return (
-      this[name] ||
-      h.error(`no ${name} shape available yet, please choose from this list:`, [
-        'circle',
-        'line',
-        'zigzag',
-        'rect',
-        'polygon',
-        'cross',
-        'equal',
-        'curve'
-      ])
-    )
+    if (this[name]) {
+      return this[name]
+    }
+    h.error(`no ${name} shape available yet, please choose from this list:`, [
+      'circle',
+      'line',
+      'zigzag',
+      'rect',
+      'polygon',
+      'cross',
+      'equal',
+      'curve'
+    ])
+
+    return
   }
 
   /**

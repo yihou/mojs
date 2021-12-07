@@ -103,9 +103,9 @@ class Timeline extends Tween {
     @param {Array} Array of Tweens/Timelines.
   */
   _appendTimelineArray(timelineArray) {
-    let i = timelineArray.length,
-      time = this._props.repeatTime - this._props.delay,
-      len = this._timelines.length
+    let i = timelineArray.length
+    const time = this._props.repeatTime - this._props.delay
+    const len = this._timelines.length
 
     while (i--) {
       this._appendTimeline(timelineArray[i], len, time)
@@ -255,7 +255,7 @@ class Timeline extends Tween {
    * @param {number, Null} time Time to start with.
    * @param {boolean} isReset
    */
-  _setStartTime(time, isReset = true) {
+  _setStartTime(time: number | null, isReset = true) {
     super._setStartTime(time)
     this._startTimelines(this._props.startTime, isReset)
   }

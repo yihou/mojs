@@ -937,8 +937,8 @@ class Tween extends Module {
     } else if (this._isInActiveArea) {
       // because T will be string of "delay" here,
       // let's normalize it be setting to TValue
-      let t = T === 'delay' ? TValue : T,
-        isGrows = time > this._prevTime
+      let t = T === 'delay' ? TValue : T
+      const isGrows = time > this._prevTime
 
       // decrement period if forward direction of update
       isGrows && t--
@@ -996,15 +996,15 @@ class Tween extends Module {
    * @param {number} time Time to get the period for.
    * @returns {number} Current period number.
    */
-  _getPeriod(time: number): number | 'delay' {
-    let p = this._props,
-      TTime = p.delay + p.duration,
-      dTime = p.delay + time - p.startTime,
-      T = dTime / TTime,
-      // if time if equal to endTime we need to set the elapsed
-      // time to 0 to fix the occasional precision js bug, which
-      // causes 0 to be something like 1e-12
-      elapsed = time < p.endTime ? dTime % TTime : 0
+  _getPeriod(time: number): string | number | 'delay' {
+    const p = this._props
+    const TTime = p.delay + p.duration
+    const dTime = p.delay + time - p.startTime
+    let T: number | string = dTime / TTime
+    // if time if equal to endTime we need to set the elapsed
+    // time to 0 to fix the occasional precision js bug, which
+    // causes 0 to be something like 1e-12
+    const elapsed = time < p.endTime ? dTime % TTime : 0
 
     // If the latest period, round the result, otherwise floor it.
     // Basically we always can floor the result, but because of js
@@ -1022,7 +1022,6 @@ class Tween extends Module {
     } else if (elapsed > 0 && elapsed < p.delay) {
       this._delayT = T
       // TODO: check why overwrite with 'delay'
-      // @ts-ignore
       T = 'delay'
     }
 
@@ -1038,7 +1037,6 @@ class Tween extends Module {
    * @param {number} time Current update time.
    * @param {boolean} isYoyo Is yoyo period. Used in Timeline to pass to Tween.
    */
-  // @ts-ignore
   _setProgress(proc, time, isYoyo) {
     const p = this._props
     const isYoyoChanged = p.wasYoyo !== isYoyo
@@ -1338,14 +1336,12 @@ class Tween extends Module {
    */
   _overrideCallback(callback, fun) {
     const isCallback = callback && typeof callback === 'function',
-      override = function callbackOverride() {
+      override = function callbackOverride(...args) {
         // call overridden callback if it exists
-        // @ts-ignore
-        isCallback && callback.apply(this, arguments) // eslint-disable-line
+        isCallback && callback(...args)
 
         // call the passed cleanup function
-        // @ts-ignore
-        fun.apply(this, arguments) // eslint-disable-line
+        fun(...args)
       }
 
     // add overridden flag

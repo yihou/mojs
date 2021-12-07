@@ -1,4 +1,5 @@
 import Tween from '../tween/tween'
+import {Unit} from '../types'
 
 interface DeltaParam {
   tweenOptions: any
@@ -64,6 +65,7 @@ class Delta {
    * @param {object} o Options object.
    */
   _createTween(o: any = {}) {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
     const it = this
     o.callbackOverrides = {
       onUpdate(ep: any, p: any) {
@@ -75,7 +77,7 @@ class Delta {
     // to refresh the tween when needed
     if (!this._o.isChained) {
       o.callbackOverrides.onRefresh = function (
-        isBefore: any,
+        _isBefore: any,
         ep: any,
         p: any
       ) {
@@ -197,7 +199,7 @@ class Delta {
       name: any
       curve: (arg0: any) => any
       delta: { length?: any }
-      start: {}
+      start: Partial<Unit>
     },
     ep: number,
     p: number
