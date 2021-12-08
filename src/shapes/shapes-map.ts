@@ -29,11 +29,7 @@ class ShapesMap {
   equal = Equal
   curve = Curve
 
-  constructor() {
-    this.addShape = h.bind(this.addShape, this)
-  }
-
-  getShape(name) {
+  getShape(name: keyof ShapesMap) {
     if (this[name]) {
       return this[name]
     }
@@ -57,7 +53,7 @@ class ShapesMap {
     @param {String} name Name of the shape module.
     @param {Object} Module Shape module class.
   */
-  addShape(name, Module) {
+  addShape = (name: keyof ShapesMap, Module: any) => {
     return (this[name] = Module)
   }
 }

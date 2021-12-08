@@ -1,20 +1,23 @@
+import get from 'lodash.get'
+
 import h from './h'
 import Timeline from './tween/timeline'
 import Tweenable from './tween/tweenable'
+import {MergeFlags, UnitOptions} from './types'
 
 /*
   The Thenable class adds .then public method and
   the ability to chain API calls.
 */
-class Thenable extends Tweenable {
-  _masterModule?: Thenable = undefined
-  _modules: Thenable[] = []
+class Thenable<T> extends Tweenable<Thenable<T> & {masterModule: Thenable<T>}> {
+  _masterModule?: Thenable<T> = undefined
+  _modules: Thenable<T>[] = []
   _isChained = false
   _nonMergeProps: any
 
-  _history: any[]
+  _history: any[] = []
 
-  constructor(o?) {
+  constructor(o?: T) {
     super(o)
 
     this._vars()
@@ -26,7 +29,7 @@ class Thenable extends Tweenable {
     @param    {object} Options for the next animation.
     @returns  {object} this.
   */
-  then(o) {
+  then(o: Thenable<T>) {
     // return if nothing was passed
     if (o == null || !Object.keys(o).length) {
       return 1
@@ -64,7 +67,7 @@ class Thenable extends Tweenable {
     @param   {object} Options object.
     @returns {object} Options object.
   */
-  _resetMergedFlags(obj) {
+  _resetMergedFlags(obj: T & MergeFlags<Thenable<T>>) {
     // set the submodule to be without timeline for perf reasons
     obj.isTimelineLess = true
 
@@ -95,17 +98,17 @@ class Thenable extends Tweenable {
     }
 
     // save _master module
-    this._masterModule = this._o.masterModule
+    this._masterModule = get(this._o, 'masterModule')
 
     // set isChained flag based on prevChainModule option
     this._isChained = !!this._masterModule
 
-    // we are expect that the _o object
+    // we are expected that the _o object
     // have been already extended by defaults
     const initialRecord = h.cloneObj(this._props)
     for (const key in this._arrayPropertyMap) {
-      if (this._o[key]) {
-        const preParsed = this._parsePreArrayProperty(key, this._o[key])
+      if (get(this._o, key)) {
+        const preParsed = this._parsePreArrayProperty(key as any, get(this._o, key))
         initialRecord[key] = preParsed
       }
     }
@@ -126,8 +129,8 @@ class Thenable extends Tweenable {
     @param {object} End options for the merge.
     @returns {object} Merged options.
   */
-  _mergeThenOptions(start, end) {
-    const o = {}
+  _mergeThenOptions(start: any, end: any) {
+    const o: any = {}
     this._mergeStartLoop(o, start)
     this._mergeEndLoop(o, start, end)
     this._history.push(o)
@@ -141,18 +144,18 @@ class Thenable extends Tweenable {
     @param {Any} Start property value.
     @returns {Any} Start property value.
   */
-  _checkStartValue(_name, value) {
+  _checkStartValue(_name: string, value: any) {
     return value
   }
 
   /*
     Originally part of the _mergeThenOptions.
-    Loops thru start object and copies all the props from it.
+    Loops through start object and copies all the props from it.
     @param {object} An object to copy in.
     @parma {object} Start options object.
   */
-  _mergeStartLoop(o, start) {
-    // loop thru start options object
+  _mergeStartLoop(o: any, start: any) {
+    // loop through start options object
     for (const key in start) {
       const value = start[key]
       if (start[key] == null) {
@@ -173,23 +176,23 @@ class Thenable extends Tweenable {
 
   /*
     Originally part of the _mergeThenOptions.
-    Loops thru start object and merges all the props from it.
+    Loops through start object and merges all the props from it.
     @param {object} An object to copy in.
     @parma {object} Start options object.
     @parma {object} End options object.
   */
-  _mergeEndLoop(o, start, end) {
+  _mergeEndLoop(o: Thenable<T>, start: any, end: any) {
     for (const key in end) {
       // just copy parent option
       if (key == 'parent') {
-        o[key] = end[key]
+        (o as any)[key] = end[key]
         continue
       }
 
       // get key/value of the end object
       // endKey - name of the property, endValue - value of the property
       const endValue = end[key]
-      let startValue = start[key] != null ? start[key] : this._defaults[key]
+      let startValue = start[key] != null ? start[key] : (this._defaults as any)[key as any]
 
       startValue = this._checkStartValue(key, startValue)
       if (endValue == null) {
@@ -210,7 +213,7 @@ class Thenable extends Tweenable {
         startValue = start.scale
       }
 
-      o[key] = this._mergeThenProperty(key, startValue, endValue)
+      (o as any)[key] = this._mergeThenProperty(key as any, startValue, endValue)
     }
   }
 
@@ -221,7 +224,7 @@ class Thenable extends Tweenable {
     @param {Any}    Start value of the property.
     @param {Any}    End value of the property.
   */
-  _mergeThenProperty(key, startValue, endValue) {
+  _mergeThenProperty(key: keyof UnitOptions, startValue: any, endValue: any) {
     // if isnt tween property
     const isBoolean = typeof endValue === 'boolean'
     let curve
@@ -263,27 +266,16 @@ class Thenable extends Tweenable {
   }
 
   /*
-    Method to retreive array's length and return -1 for
+    Method to retrieve array's length and return -1 for
     all other types.
     @private
     @param {Array, Any} Array to get the width for.
     @returns {number} Array length or -1 if not array.
   */
-  _getArrayLength(arr) {
+  _getArrayLength(arr: any[]) {
     return Array.isArray(arr) ? arr.length : -1
   }
 
-  /*
-    Method to check if the property is delta property.
-    @private
-    @param {Any} Parameter value to check.
-    @returns {boolean}
-  */
-  _isDelta(optionsValue) {
-    let isObject = h.isObject(optionsValue)
-    isObject = isObject && !optionsValue.unit
-    return !(!isObject || Array.isArray(optionsValue) || h.isDOM(optionsValue))
-  }
 
   /*
     Method to check if the module is first in `then` chain.
@@ -302,9 +294,9 @@ class Thenable extends Tweenable {
   _isLastInChain() {
     const master = this._masterModule
 
-    // if there is no master field - check the modules length
+    // if there is no master field - check the modules' length
     // if module length is 1 thus there is no modules chain
-    // it is the last one, otherwise it isnt
+    // it is the last one, otherwise it isn't
     if (!master) {
       return this._modules.length === 1
     }

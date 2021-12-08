@@ -8,12 +8,12 @@
 
 import { default as Bit } from './bit'
 
-class Circle extends Bit {
+class Circle extends Bit<{shape: string}> {
   _declareDefaults() {
     // TODO: check if passing in arguments are required
     // super._declareDefaults(...arguments);
     super._declareDefaults()
-    return (this._defaults.shape = 'ellipse')
+    this._defaults.shape = 'ellipse'
   }
 
   _draw() {

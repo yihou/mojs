@@ -2,7 +2,8 @@ import h from '../h'
 
 import Tween from './tween'
 
-class Timeline extends Tween {
+class Timeline extends Tween<any> {
+  callbacksContext: any
   /*
     API method to add child tweens/timelines.
     @public
@@ -102,7 +103,7 @@ class Timeline extends Tween {
     @private
     @param {Array} Array of Tweens/Timelines.
   */
-  _appendTimelineArray(timelineArray) {
+  _appendTimelineArray(timelineArray: Timeline[]) {
     let i = timelineArray.length
     const time = this._props.repeatTime - this._props.delay
     const len = this._timelines.length
@@ -119,7 +120,7 @@ class Timeline extends Tween {
     @param {number} Index of the append.
     @param {number} Shift time.
   */
-  _appendTimeline(timeline, index, time?) {
+  _appendTimeline(timeline: Timeline, index: number, time?: number) {
     // if timeline is a module with timeline property then extract it
     if (timeline.timeline instanceof Timeline) {
       timeline = timeline.timeline
@@ -177,23 +178,23 @@ class Timeline extends Tween {
   /**
    * Method set progress on self and child Tweens/Timelines.
    * @private
-   * @param {number} p Progress to set.
+   * @param {number} progress Progress to set.
    * @param {number} time Current update time.
    * @param {boolean} isYoyo
    */
-  _setProgress(p, time, isYoyo) {
+  _setProgress(progress: number, time: number, isYoyo?: boolean) {
     // we need to pass self previous time to children
     // to prevent initial _wasUnknownUpdate nested waterfall
     // if not yoyo option set, pass the previous time
     // otherwise, pass previous or next time regarding yoyo period.
 
     // COVER CURRENT SWAPPED ORDER
-    this._updateChildren(p, time, isYoyo)
+    this._updateChildren(progress, time, isYoyo)
 
-    Tween.prototype._setProgress.call(this, p, time)
+    Tween.prototype._setProgress.call(this, progress, time)
   }
 
-  _updateChildren(p, time, isYoyo) {
+  _updateChildren(p: number, time: number, isYoyo?: boolean) {
     let coef = time > this._prevTime ? -1 : 1
     if (this._props.isYoyo && isYoyo) {
       coef *= -1
@@ -222,7 +223,7 @@ class Timeline extends Tween {
     @private
     @param {object} Tween or Timeline to calculate.
   */
-  _recalcDuration(timeline) {
+  _recalcDuration(timeline: Timeline) {
     const p = timeline._props
     const timelineTime =
       p.repeatTime / p.speed + (p.shiftTime || 0) + timeline._negativeShift

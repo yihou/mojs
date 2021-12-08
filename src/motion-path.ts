@@ -337,7 +337,7 @@ class MotionPath {
   }
 
   vars() {
-    this.getScaler = h.bind(this.getScaler, this)
+    this.getScaler = this.getScaler.bind(this)
     this.resize = resize
     this.props = h.cloneObj(this.defaults)
     this.extendOptions(this.o)
@@ -533,7 +533,7 @@ DOMNode or another module.`)
     }
   }
 
-  getScaler() {
+  getScaler = () => {
     this.cSize = {
       width: this.container.offsetWidth || 0,
       height: this.container.offsetHeight || 0

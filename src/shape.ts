@@ -1,6 +1,7 @@
 import h from './h'
 import Module from './module'
 import shapesMap from './shapes/shapes-map'
+import Thenable from './thenable'
 import Tunable from './tunable'
 
 // TODO
@@ -9,8 +10,8 @@ import Tunable from './tunable'
 //  --
 //  - tween for every prop
 
-class Shape extends Tunable {
-  _modules: Shape[]
+class Shape<T extends Thenable<T>> extends Tunable<T> {
+  _modules: Shape<T>[]
 
   /*
     Method to declare module's defaults.
@@ -159,7 +160,7 @@ class Shape extends Tunable {
     @param    {object} Options for the next animation.
     @returns  {object} this.
   */
-  then(o) {
+  then(o?: any) {
     // this._makeTimeline()
     super.then(o)
 

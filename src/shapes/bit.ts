@@ -1,49 +1,71 @@
 import h from '../h'
 import Module from '../module'
+import {Nullable, Point} from '../types'
 
-class Bit extends Module {
-  _drawMap
-  _state
-  _drawMapLength
-  _isRendered
-  _canvas
+interface BitDefaults {
+  ns: string
+  tag: string
+  parent: HTMLElement
+  ratio: number
+  radius: number
+  stroke: string
+  'stroke-dasharray': string
+  'stroke-dashoffset': string
+  'stroke-linecap': string
+  'stroke-width': number
+  'stroke-opacity': number
+  'fill-opacity': number
+  fill: string
+  width: number
+  height: number
+  radiusX: Nullable<number>
+  radiusY: Nullable<number>
+}
+
+class Bit<T = any> extends Module<BitDefaults & T> {
+  _drawMap = [
+    'stroke',
+    'stroke-width',
+    'stroke-opacity',
+    'stroke-dasharray',
+    'fill',
+    'stroke-dashoffset',
+    'stroke-linecap',
+    'fill-opacity',
+    'transform'
+  ]
+
+  _defaults: any = {
+    ns: 'http://www.w3.org/2000/svg',
+    tag: 'ellipse',
+    parent: document.body,
+    ratio: 1,
+    radius: 50,
+    radiusX: null,
+    radiusY: null,
+    stroke: 'hotpink',
+    'stroke-dasharray': '',
+    'stroke-dashoffset': '',
+    'stroke-linecap': '',
+    'stroke-width': 2,
+    'stroke-opacity': 1,
+    fill: 'transparent',
+    'fill-opacity': 1,
+    width: 0,
+    height: 0
+  }
+
+  _state: Record<any, any> = {}
+  _drawMapLength = 0
+  _isRendered = false
+  _canvas?: SVGElement
 
   /*
     Method to declare module's defaults.
     @private
   */
-  _declareDefaults() {
-    this._defaults = {
-      ns: 'http://www.w3.org/2000/svg',
-      tag: 'ellipse',
-      parent: document.body,
-      ratio: 1,
-      radius: 50,
-      radiusX: null,
-      radiusY: null,
-      stroke: 'hotpink',
-      'stroke-dasharray': '',
-      'stroke-dashoffset': '',
-      'stroke-linecap': '',
-      'stroke-width': 2,
-      'stroke-opacity': 1,
-      fill: 'transparent',
-      'fill-opacity': 1,
-      width: 0,
-      height: 0
-    }
-    this._drawMap = [
-      'stroke',
-      'stroke-width',
-      'stroke-opacity',
-      'stroke-dasharray',
-      'fill',
-      'stroke-dashoffset',
-      'stroke-linecap',
-      'fill-opacity',
-      'transform'
-    ]
-  }
+  _declareDefaults() {}
+
   _vars() {
     this._state = {}
     this._drawMapLength = this._drawMap.length
@@ -81,10 +103,10 @@ class Bit extends Module {
     const p = this._props
 
     // create canvas - `svg` element to draw in
-    this._canvas = document.createElementNS(p.ns, 'svg')
+    this._canvas = document.createElementNS(p.ns, 'svg') as any as SVGElement
 
     // create the element shape element and add it to the canvas
-    this.el = document.createElementNS(p.ns, p.tag)
+    this.el = document.createElementNS(p.ns, p.tag) as any as SVGGeometryElement
     this._canvas.appendChild(this.el)
   }
 
@@ -93,6 +115,10 @@ class Bit extends Module {
     @private
   */
   _setCanvasSize() {
+    if (!this._canvas) {
+      throw new Error('"_canvas" is not defined.')
+    }
+
     const style = this._canvas.style
 
     style.display = 'block'
@@ -122,7 +148,8 @@ class Bit extends Module {
     }
     this._state.radius = this._props.radius
   }
-  castStrokeDash(name) {
+
+  castStrokeDash(name: string) {
     let stroke
     // # if array of values
     const p = this._props
@@ -134,8 +161,13 @@ class Bit extends Module {
           dash.unit === '%' ? this.castPercent(dash.value) : dash.value
         stroke += `${cast} `
       }
-      p[name] = stroke === '0 ' ? (stroke = '') : stroke
-      return (p[name] = stroke)
+      if (stroke === '0 ') {
+        p[name] = ''
+      } else {
+        p[name] = stroke
+      }
+
+      return
     }
 
     // # if single value
@@ -150,15 +182,19 @@ class Bit extends Module {
       }
     }
   }
-  castPercent(percent) {
+
+  castPercent(percent: number) {
     return percent * (this._props.length / 100)
   }
 
   /*
-    Method to set props to attributes and cache the values.
+    Method to set props to attribute and cache the values.
     @private
   */
-  _setAttrIfChanged(name, value) {
+  _setAttrIfChanged(name: string, value: any) {
+    if (!this.el) {
+      throw new Error('"this.el" is not defined')
+    }
     if (this._state[name] !== value) {
       // this.el.style[name] = value;
       this.el.setAttribute(name, value)
@@ -172,6 +208,10 @@ class Bit extends Module {
     @returns {Number} Length of the shape.
   */
   _getLength() {
+    if (!this.el) {
+      throw new Error('"el" is not defined.')
+    }
+
     const p = this._props
     let len: number
     const isGetLength = !!(this.el && this.el.getTotalLength)
@@ -190,7 +230,7 @@ class Bit extends Module {
     @param {Array} Array of points.
     @returns {Number} Distance between all points.
   */
-  _getPointsPerimiter(points) {
+  _getPointsPerimeter(points: Point[]) {
     let sum = 0
 
     for (let i = 1; i < points.length; i++) {
@@ -206,9 +246,9 @@ class Bit extends Module {
     @private
     @param {Object} Point 1.
     @param {Object} Point 2.
-    @returns {Number} Distance between the pooints.
+    @returns {Number} Distance between the points.
   */
-  _pointsDelta(point1, point2) {
+  _pointsDelta(point1: Point, point2: Point) {
     const dx = Math.abs(point1.x - point2.x),
       dy = Math.abs(point1.y - point2.y)
     return Math.sqrt(dx * dx + dy * dy)
@@ -220,7 +260,7 @@ class Bit extends Module {
     @param {Number} Module width.
     @param {Number} Module height.
   */
-  _setSize(width, height) {
+  _setSize(width: number, height: number) {
     const p = this._props
     p.width = width
     p.height = height

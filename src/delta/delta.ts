@@ -1,10 +1,17 @@
 import Tween from '../tween/tween'
-import {Unit} from '../types'
+import {
+  ArrayDelta,
+  ColorDelta,
+  DeltaWithoutTweenOpts,
+  NumberDelta,
+  Unit,
+  UnitDelta
+} from '../types'
 
 interface DeltaParam {
   tweenOptions: any
   isChained: boolean
-  deltas: any[]
+  deltas: DeltaWithoutTweenOpts[]
   props: any
   callbacksContext: any
 }
@@ -95,11 +102,13 @@ class Delta {
     @param {number} Eased progress to calculate - [0..1].
     @param {number} Progress to calculate - [0..1].
   */
-  _calcCurrentProps(easedProgress: any, p: any) {
+  _calcCurrentProps(easedProgress: number, progress: number) {
     const deltas = this._o.deltas || []
     for (let i = 0; i < deltas.length; i++) {
-      const type = deltas[i].type
-      this[`_calcCurrent_${type}`](deltas[i], easedProgress, p)
+      const delta: DeltaWithoutTweenOpts = deltas[i]
+      const type = delta.type
+      const methodKey: keyof Delta = `_calcCurrent_${type}`
+      this[methodKey](delta as any, easedProgress, progress)
     }
   }
 
@@ -110,14 +119,9 @@ class Delta {
     @param {number} Plain progress [0..1].
   */
   _calcCurrent_color(
-    delta: {
-      start: any
-      delta: any
-      curve: (arg0: any) => any
-      name: string | number
-    },
-    ep: number,
-    p: number
+    delta: DeltaWithoutTweenOpts<ColorDelta>,
+    easedProgress: number,
+    progress: number
   ) {
     let r: any
     let g: any
@@ -125,17 +129,27 @@ class Delta {
     let a: any
     const start = delta.start
     const d = delta.delta
+
+    if (
+      typeof start.r !== 'number' ||
+      typeof start.g !== 'number' ||
+      typeof start.b !== 'number' ||
+      typeof start.a !== 'number'
+    ) {
+      throw new Error(`"start" color is not a valid color`)
+    }
+
     if (!delta.curve) {
-      r = parseInt(start.r + ep * d.r, 10)
-      g = parseInt(start.g + ep * d.g, 10)
-      b = parseInt(start.b + ep * d.b, 10)
-      a = parseFloat(start.a + ep * d.a)
+      r = parseInt(start.r + easedProgress * d.r as any as string, 10)
+      g = parseInt(start.g + easedProgress * d.g as any as string, 10)
+      b = parseInt(start.b + easedProgress * d.b as any as string, 10)
+      a = parseFloat(start.a + easedProgress * d.a as any as string)
     } else {
-      const cp = delta.curve(p)
-      r = parseInt((cp * (start.r + p * d.r)) as any as string, 10)
-      g = parseInt((cp * (start.g + p * d.g)) as any as string, 10)
-      b = parseInt((cp * (start.b + p * d.b)) as any as string, 10)
-      a = parseFloat((cp * (start.a + p * d.a)) as any as string)
+      const cp = delta.curve(progress)
+      r = parseInt((cp * (start.r + progress * d.r)) as any as string, 10)
+      g = parseInt((cp * (start.g + progress * d.g)) as any as string, 10)
+      b = parseInt((cp * (start.b + progress * d.b)) as any as string, 10)
+      a = parseFloat((cp * (start.a + progress * d.a)) as any as string)
     }
     this._o.props[delta.name] = `rgba(${r},${g},${b},${a})`
   }
@@ -147,18 +161,13 @@ class Delta {
     @param {number} Plain progress [0..1].
   */
   _calcCurrent_number(
-    delta: {
-      name: string | number
-      curve: (arg0: any) => number
-      start: number
-      delta: number
-    },
-    ep: number,
-    p: number
+    delta: DeltaWithoutTweenOpts<NumberDelta>,
+    easedProgress: number,
+    progress: number
   ) {
     this._o.props[delta.name] = !delta.curve
-      ? delta.start + ep * delta.delta
-      : delta.curve(p) * (delta.start + p * delta.delta)
+      ? delta.start + easedProgress * delta.delta
+      : delta.curve(progress) * (delta.start + progress * delta.delta)
   }
 
   /*
@@ -168,24 +177,21 @@ class Delta {
     @param {number} Plain progress [0..1].
   */
   _calcCurrent_unit(
-    delta: {
-      curve: (arg0: any) => number
-      start: { value: number }
-      delta: number
-      name: string | number
-      end: { unit: any }
-    },
-    ep: number,
-    p: number
+    delta: DeltaWithoutTweenOpts<UnitDelta>,
+    easedProgress: number,
+    progress: number
   ) {
     let currentValue: number
+    const startValue = (delta.start as Unit).value as number
+    const endUnit = delta.end as Unit
+
     if (!delta.curve) {
-      currentValue = delta.start.value + ep * delta.delta
+      currentValue = startValue + easedProgress * delta.delta
     } else {
-      currentValue = delta.curve(p) * (delta.start.value + p * delta.delta)
+      currentValue = delta.curve(progress) * (startValue + progress * delta.delta)
     }
 
-    this._o.props[delta.name] = `${currentValue}${delta.end.unit}`
+    this._o.props[delta.name] = `${currentValue}${endUnit.unit}`
   }
 
   /*
@@ -195,14 +201,9 @@ class Delta {
     @param {number} Plain progress [0..1].
   */
   _calcCurrent_array(
-    delta: {
-      name: any
-      curve: (arg0: any) => any
-      delta: { length?: any }
-      start: Partial<Unit>
-    },
-    ep: number,
-    p: number
+    delta: DeltaWithoutTweenOpts<ArrayDelta>,
+    easedProgress: number,
+    progress: number
   ) {
     // var arr,
     const name = delta.name
@@ -217,13 +218,18 @@ class Delta {
 
     // just optimization to prevent curve
     // calculations on every array item
-    const proc = delta.curve ? delta.curve(p) : null
+    const proc = delta.curve ? delta.curve(progress) : null
 
     for (let i = 0; i < delta.delta.length; i++) {
-      const item = delta.delta[i],
-        dash = !delta.curve
-          ? delta.start[i].value + ep * item.value
-          : proc * (delta.start[i].value + p * item.value)
+      const item = delta.delta[i] as Unit
+      const startValue = (delta.start[i] as Unit).value as number
+
+      let dash: number
+      if (!delta.curve) {
+        dash = startValue + easedProgress * (item?.value as number)
+      } else {
+        dash = proc * (startValue + progress * (item?.value as number))
+      }
 
       string += `${dash}${item.unit} `
 

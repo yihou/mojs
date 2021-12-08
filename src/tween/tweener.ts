@@ -1,11 +1,13 @@
 import Tween from './tween'
 
 class Tweener {
-  tweens: Tween[]
-  _savedTweens
-  _isRunning
-  _visibilityHidden
-  _visibilityChange
+  _Tweens = 0
+  _Timelines = 0
+  tweens: Tween<any>[] = []
+  _savedTweens: Tween<any>[] = []
+  _isRunning = false
+  _visibilityHidden?: string
+  _visibilityChange?: string
 
   constructor() {
     this._vars()
@@ -16,8 +18,6 @@ class Tweener {
   _vars() {
     this.tweens = []
     this._savedTweens = []
-    this._loop = this._loop.bind(this)
-    this._onVisibilityChange = this._onVisibilityChange.bind(this)
   }
 
   /*
@@ -25,7 +25,7 @@ class Tweener {
     @private
     @returns this
   */
-  _loop() {
+  _loop = () => {
     if (!this._isRunning) {
       return false
     }
@@ -61,7 +61,7 @@ class Tweener {
     Method to update every tween/timeline on animation frame.
     @private
   */
-  _update(time) {
+  _update(time: number) {
     let i = this.tweens.length
     while (i--) {
       // cache the current tween
@@ -78,7 +78,7 @@ class Tweener {
     Method to add a Tween/Timeline to loop pool.
     @param {object} Tween/Timeline to add.
   */
-  add(tween) {
+  add<T = any>(tween: Tween<T>) {
     // return if tween is already running
     if (tween._isRunning) {
       return
@@ -100,7 +100,7 @@ class Tweener {
     Method to remove specific tween/timeline form updating.
     @private
   */
-  remove(tween) {
+  remove<T = any>(tween: Tween<T> | number) {
     const index = typeof tween === 'number' ? tween : this.tweens.indexOf(tween)
 
     if (index !== -1) {
@@ -133,7 +133,7 @@ class Tweener {
     }
 
     document.addEventListener(
-      this._visibilityChange,
+      this._visibilityChange as keyof Document,
       this._onVisibilityChange,
       false
     )
@@ -142,8 +142,8 @@ class Tweener {
   /*
     Method that will fire on visibility change.
   */
-  _onVisibilityChange() {
-    if (document[this._visibilityHidden]) {
+  _onVisibilityChange = () => {
+    if (document[this._visibilityHidden as keyof Document]) {
       this._savePlayingTweens()
     } else {
       this._restorePlayingTweens()

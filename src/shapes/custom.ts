@@ -1,7 +1,7 @@
 import Bit from './bit'
 
 class Custom extends Bit {
-  _length
+  _length?: number
 
   /*
     Method to declare module's defaults.
@@ -53,6 +53,10 @@ class Custom extends Bit {
     const radiusXChange = state['radiusX'] !== p.radiusX
     const radiusYChange = state['radiusY'] !== p.radiusY
     const radiusChange = state['radius'] !== p.radius
+
+    if (!this.el) {
+      throw new Error('"this.el" is not defined.')
+    }
 
     // update transform only if one of radiuses changed
     if (radiusXChange || radiusYChange || radiusChange) {
@@ -115,7 +119,7 @@ class Custom extends Bit {
     @returns {Number} Length of the shape.
   */
   _getLength() {
-    return this._length
+    return this._length as number
   }
 }
 

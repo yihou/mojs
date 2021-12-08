@@ -97,7 +97,7 @@ class Polygon extends Bit {
     @overrides @ Bit
   */
   _getLength() {
-    return this._getPointsPerimiter(this._radialPoints)
+    return this._getPointsPerimeter(this._radialPoints)
   }
 }
 

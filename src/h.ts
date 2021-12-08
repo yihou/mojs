@@ -1,9 +1,20 @@
 // Utils methods and map objects
 
 import cloneWith from 'lodash.clonewith'
+import get from 'lodash.get'
 
 import mojs from './mojs'
-import {DeltaType, PossibleUnit, Prefix, Unit} from './types'
+import {
+  Callbacks,
+  Color,
+  DeltaType,
+  PossibleUnit,
+  PossiblyNullOrUndefined,
+  Prefix,
+  TweenOptions,
+  Unit,
+  UnitOptions
+} from './types'
 
 /*
  * decaffeinate suggestions:
@@ -35,7 +46,7 @@ export class Helpers {
   padding: 1px 5px 2px; border: 1px solid #FF512F;`
   // ---
 
-  // Shortcut map for the 16 standart web colors
+  // Shortcut map for the 16 standard web colors
   // used to coerce literal name to rgb
   //
   // @property   shortColors
@@ -65,7 +76,7 @@ export class Helpers {
   // ---
   // none-tweenable props
   chainOptionMap = {} // callbacksContext: 1
-  callbacksMap = {
+  callbacksMap: Callbacks = {
     onRefresh: 1,
     onStart: 1,
     onComplete: 1,
@@ -79,7 +90,7 @@ export class Helpers {
     onPlaybackStop: 1,
     onPlaybackComplete: 1
   }
-  tweenOptionMap = {
+  tweenOptionMap: TweenOptions = {
     duration: 1,
     delay: 1,
     speed: 1,
@@ -91,7 +102,7 @@ export class Helpers {
     isReversed: 1,
     callbacksContext: 1
   }
-  unitOptionMap = {
+  unitOptionMap: UnitOptions = {
     left: 1,
     top: 1,
     x: 1,
@@ -99,13 +110,14 @@ export class Helpers {
     rx: 1,
     ry: 1
   }
+
   // strokeDashPropsMap:
   //   strokeDasharray:  1
   //   # strokeDashoffset: 1
   RAD_TO_DEG = 180 / Math.PI
   // DEG_TO_RAD: Math.PI/180
 
-  prefix?: Prefix
+  prefix = Helpers.getPrefix()
   isFF = false
   isIE = false
   isOldOpera = false
@@ -113,7 +125,7 @@ export class Helpers {
   isChrome = false
   isOpera = false
   is3d = false
-  uniqIDs?: number
+  uniqIDs = 0
   div = document.createElement('div')
   defaultStyles
   remBase?: number
@@ -127,7 +139,6 @@ export class Helpers {
   }
 
   vars() {
-    this.prefix = this.getPrefix()
     this.getRemBase()
     this.isFF = this.prefix.lowercase === 'moz'
     this.isIE = this.prefix.lowercase === 'ms'
@@ -145,7 +156,7 @@ export class Helpers {
   }
 
   /**
-   * Clones object by iterating thru object properties
+   * Clones object by iterating through object properties
    *
    * @method cloneObj
    * @param {object} obj to clone
@@ -157,10 +168,10 @@ export class Helpers {
    *   // result: { foo: 'bar' }
    * @return {object} new object
    */
-  cloneObj<T extends Record<string, any>>(obj: T, exclude?) {
+  cloneObj<T extends Record<string, any>>(obj: T, exclude?: Record<keyof T, any>) {
     const excludeKeys = Object.keys(exclude || {})
 
-    return cloneWith(obj, function (value, key: string) {
+    return cloneWith<T, T | Partial<T> | undefined>(obj, (value: any, key: any) => {
       const shouldExclude = !excludeKeys.some((excludeKey) => excludeKey == key)
       if (shouldExclude) {
         return undefined
@@ -186,7 +197,7 @@ export class Helpers {
    *
    * @return {object} the first modified object
    */
-  extend(objTo, objFrom) {
+  extend(objTo: Record<any, any>, objFrom: Record<any, any>) {
     return {
       ...objFrom,
       ...objTo
@@ -217,10 +228,10 @@ export class Helpers {
     return value
   }
 
-  setPrefixedStyle(el: HTMLElement, name: string, value: string) {
+  setPrefixedStyle(el: HTMLElement | SVGGeometryElement, name: string, value: string) {
     if (
       name === 'transform' &&
-      el.style[`${this.prefix.css}${name}`] === value
+      el.style[`${this.prefix.css}${name}` as keyof CSSStyleDeclaration] === value
     ) {
       el.style[name] = value
     }
@@ -249,7 +260,7 @@ export class Helpers {
 
       while (len--) {
         const key = keys[len]
-        const value = style[key]
+        const value = style[key as keyof CSSStyleDeclaration] as string
 
         this.setPrefixedStyle(element, key, value)
       }
@@ -258,7 +269,7 @@ export class Helpers {
     }
   }
 
-  prepareForLog(args) {
+  prepareForLog(args: any[]) {
     args = Array.prototype.slice.apply(args)
     args.unshift('::')
     args.unshift(this.logBadgeCss)
@@ -266,28 +277,28 @@ export class Helpers {
     return args
   }
 
-  log(...args) {
+  log(...args: any) {
     // if (mojs.isDebug === false) {
     //   return
     // }
     return console.log(...this.prepareForLog(args))
   }
 
-  warn(...args) {
+  warn(...args: any) {
     // if (mojs.isDebug === false) {
     //   return
     // }
     return console.warn(...this.prepareForLog(args))
   }
 
-  error(...args) {
+  error(...args: any) {
     // if (mojs.isDebug === false) {
     //   return
     // }
     return console.error(...this.prepareForLog(args))
   }
 
-  parseUnit(value: number | string | undefined): PossibleUnit {
+  parseUnit(value: PossibleUnit): Unit {
     let returnVal: PossibleUnit = value
     if (typeof value === 'number') {
       returnVal = {
@@ -314,12 +325,7 @@ export class Helpers {
       }
     }
 
-    return returnVal
-  }
-
-  bind(func, context) {
-    console.warn('@deprecating bind to use native function bind?')
-    return func.bind(context)
+    return returnVal as Unit
   }
 
   getRadialPoint(
@@ -343,13 +349,13 @@ export class Helpers {
     }
   }
 
-  getPrefix() {
+  static getPrefix(): Prefix {
     const styles: CSSStyleDeclaration = window.getComputedStyle(document.documentElement, '')
     const v = Array.prototype.slice
       .call(styles)
       .join('')
       .match(/-(moz|webkit|ms)-/) as string[]
-    let pre = v[1]
+    let pre = v[1] as Prefix['lowercase']
 
     if (!v && (styles as any)['OLink']) {
       pre = 'o'
@@ -360,7 +366,7 @@ export class Helpers {
       dom: domMatch ? domMatch[1] : undefined,
       lowercase: pre,
       css: `-${pre}-`,
-      js: pre[0].toUpperCase() + pre.substr(1)
+      js: pre[0].toUpperCase() + pre.substring(1)
     }
   }
 
@@ -397,12 +403,7 @@ export class Helpers {
     return delta
   }
 
-  isArray(variable: unknown) {
-    console.warn('@deprecating isArray to use native isArray')
-    return Array.isArray(variable)
-  }
-
-  normDashArrays(arr1: PossibleUnit[], arr2: PossibleUnit[]) {
+  normDashArrays(arr1: PossibleUnit[], arr2: PossibleUnit[]): [PossibleUnit[], PossibleUnit[]] {
     // if !arr1? or !arr2? then throw Error 'Two arrays should be passed'
     let currItem, i, lenDiff, startI
     const arr1Len = arr1.length
@@ -436,9 +437,13 @@ export class Helpers {
     return [arr1, arr2]
   }
 
-  makeColorObj(color: string) {
+  makeColorObj(color: string): Partial<Color> {
     // HEX
-    let b, colorObj, g, r, result
+    let b
+    let colorObj: Partial<Color> = {}
+    let g
+    let r
+    let result
     if (color[0] === '#') {
       result = /^#?([a-f\d]{1,2})([a-f\d]{1,2})([a-f\d]{1,2})$/i.exec(color)
       colorObj = {}
@@ -478,9 +483,9 @@ export class Helpers {
 
       const regexString1 = '^rgba?\\((\\d{1,3}),\\s?(\\d{1,3}),'
       const regexString2 = '\\s?(\\d{1,3}),?\\s?(\\d{1}|0?\\.\\d{1,})?\\)$'
-      result = new RegExp(regexString1 + regexString2, 'gi').exec(rgbColor)
+      result = new RegExp(regexString1 + regexString2, 'gi').exec(rgbColor as string) as RegExpExecArray
       colorObj = {}
-      const alpha = parseFloat(result[4] || 1)
+      const alpha = result[4] ? parseFloat(result[4]) : 1
       if (result) {
         colorObj = {
           r: parseInt(result[1], 10),
@@ -507,7 +512,7 @@ export class Helpers {
 
   parseRand(string: string) {
     const randArr = string.split(/rand\(|,|\)/)
-    const units = this.parseUnit(randArr[2])
+    const units = this.parseUnit(randArr[2]) as any
     const rand = this.rand(parseFloat(randArr[1]), parseFloat(randArr[2]))
 
     if (typeof units === 'string' || typeof units === 'number') {
@@ -515,8 +520,8 @@ export class Helpers {
     }
 
     // if it's unit
-    if (units && units.unit && randArr[2].match(units.unit)) {
-      return rand + units.unit
+    if (units && (units as Unit).unit && randArr[2].match((units as Unit).unit)) {
+      return rand + (units as Unit).unit
     }
 
     return rand
@@ -524,7 +529,7 @@ export class Helpers {
 
   parseStagger(string: string, index: number) {
     let base
-    let value = string.split(/stagger\(|\)$/)[1].toLowerCase()
+    let value: PossibleUnit = string.split(/stagger\(|\)$/)[1].toLowerCase()
     // split the value in case it contains base
     // the regex splits 0,0 0,1 1,0 1,1 combos
     // if num taken as 1, rand() taken as 0
@@ -550,21 +555,23 @@ export class Helpers {
     if ((base as Unit).isStrict) {
       unit = (base as Unit).unit
     } else {
+      // noinspection SuspiciousTypeOfGuard
       if (
         unitValue &&
         typeof unitValue !== 'number' &&
         typeof unitValue !== 'string'
       ) {
-        unit = unitValue.isStrict ? unitValue.unit : ''
+        unit = (unitValue as Unit).isStrict ? (unitValue as Unit).unit : ''
       }
     }
 
     let number = 0
     // add units only if option had a unit before
     if (typeof unitValue === 'object') {
-      if (typeof unitValue.value === 'number') {
+      if (typeof get(unitValue, 'value') === 'number') {
         const baseValue = (base as Unit).value as number
-        number = index * unitValue.value + baseValue
+        const value = unitValue.value as number
+        number = index * value + baseValue
       } else if (typeof unitValue.value === 'string') {
         const baseValue = (base as Unit).value as number
         number = index * parseFloat(unitValue.value) + baseValue
@@ -582,7 +589,7 @@ export class Helpers {
 
   // Method to parse stagger or return the passed value if
   // it has no stagger expression in it.
-  parseIfStagger(value: unknown, i: number) {
+  parseIfStagger(value: PossibleUnit, i: number) {
     if (!(typeof value === 'string' && value.match(/stagger/g))) {
       return value
     } else {
@@ -591,7 +598,7 @@ export class Helpers {
   }
 
   // if passed string has rand function then get the rand value
-  parseIfRand(str: string | unknown) {
+  parseIfRand(str: PossibleUnit): PossibleUnit {
     if (typeof str === 'string' && str.match(/rand\(/)) {
       return this.parseRand(str)
     } else {
@@ -600,7 +607,7 @@ export class Helpers {
   }
 
   // if delta object was passed: like { 20: 75 }
-  parseDelta(key: string, value, index) {
+  parseDelta(key: string, value: any, index: number) {
     // clone the delta object before proceed
     value = this.cloneObj(value)
     // parse delta easing
@@ -635,6 +642,24 @@ export class Helpers {
       }
       const startColorObj = this.makeColorObj(start)
       const endColorObj = this.makeColorObj(end)
+      if (
+        typeof startColorObj.r !== 'number' ||
+        typeof startColorObj.g !== 'number' ||
+        typeof startColorObj.b !== 'number' ||
+        typeof startColorObj.a !== 'number'
+      ) {
+        throw new Error(`"start" color is not a valid color`)
+      }
+         if (
+        typeof endColorObj.r !== 'number' ||
+        typeof endColorObj.g !== 'number' ||
+        typeof endColorObj.b !== 'number' ||
+        typeof endColorObj.a !== 'number'
+      ) {
+        throw new Error(`"end" color is not a valid color`)
+      }
+
+
       delta = {
         type: 'color',
         name: key,
@@ -655,14 +680,14 @@ export class Helpers {
       key === 'strokeDashoffset' ||
       key === 'origin'
     ) {
-      const startArr = this.strToArr(start) as string[]
+      const startArr = this.strToArr(start)
       const endArr = this.strToArr(end)
       this.normDashArrays(startArr, endArr)
 
       for (let i = 0; i < startArr.length; i++) {
-        start = startArr[i]
+        start = startArr[i] as PossibleUnit
         end = endArr[i]
-        this.mergeUnits(start, end, key)
+        this.mergeUnits(start as Unit, end, key)
       }
 
       delta = {
@@ -680,9 +705,9 @@ export class Helpers {
       // defined in helpers.chainOptionMap
       // because tween-related props shouldn't
       //# have deltas
-      if (!this.callbacksMap[key] && !this.tweenOptionMap[key]) {
+      if (!this.callbacksMap[key as keyof Callbacks] && !this.tweenOptionMap[key as keyof TweenOptions]) {
         // position values defined in unitOptionMap
-        if (this.unitOptionMap[key]) {
+        if (this.unitOptionMap[key as keyof UnitOptions]) {
           end = this.parseUnit(this.parseStringOption(end, index))
           start = this.parseUnit(this.parseStringOption(start, index)) as Unit
           this.mergeUnits(start, end, key)
@@ -697,8 +722,8 @@ export class Helpers {
           }
         } else {
           // not position but numeric values
-          end = parseFloat(this.parseStringOption(end, index))
-          start = parseFloat(this.parseStringOption(start, index))
+          end = parseFloat(this.parseStringOption(end, index) as string)
+          start = parseFloat(this.parseStringOption(start, index) as string)
           delta = {
             type: 'number',
             name: key,
@@ -714,7 +739,15 @@ export class Helpers {
     return delta
   }
 
-  mergeUnits(start, end, key) {
+  mergeUnits(start: Unit, end: Unit, key: string) {
+    if (typeof start !== 'object') {
+      throw new Error(`"start" is not a unit`)
+    }
+
+    if (typeof end !== 'object') {
+      throw new Error(`"end" is not a unit`)
+    }
+
     if (!end.isStrict && start.isStrict) {
       end.unit = start.unit
       return (end.string = `${end.value}${end.unit}`)
@@ -731,23 +764,22 @@ export class Helpers {
     }
   }
 
-  rand(min, max) {
+  rand(min: number, max: number) {
     return Math.random() * (max - min) + min
   }
 
-  isDOM(o) {
+  isDOM(o: unknown) {
     if (o == null) {
       return false
     }
     // if typeof Node is 'function' then o instanceof Node
-    const isNode =
-      typeof o.nodeType === 'number' && typeof o.nodeName === 'string'
+    const isNode = typeof o === 'object' && typeof get(o, 'nodeType') === 'number' && typeof get(o, 'nodeName') === 'string'
     return typeof o === 'object' && isNode
   }
 
-  getChildElements(element) {
+  getChildElements(element: HTMLElement) {
     const { childNodes } = element
-    const children: HTMLElement[] = []
+    const children: ChildNode[] = []
     let i = childNodes.length
     while (i--) {
       if (childNodes[i].nodeType === 1) {
@@ -757,16 +789,14 @@ export class Helpers {
     return children
   }
 
-  delta(start, end) {
-    const type1 = typeof start
-    const type2 = typeof end
-    const isType1 = type1 === 'string' || (type1 === 'number' && !isNaN(start))
-    const isType2 = type2 === 'string' || (type2 === 'number' && !isNaN(end))
+  delta(start: PossibleUnit, end: PossibleUnit) {
+    const isType1 = typeof start === 'string' || (typeof start === 'number' && !isNaN(start))
+    const isType2 = typeof end === 'string' || (typeof end === 'number' && !isNaN(end))
     if (!isType1 || !isType2) {
       this.error(`delta method expects Strings or Numbers at input but got - ${start}, ${end}`)
       return undefined
     }
-    const obj = {}
+    const obj: Record<string, string | number> = {}
     obj[start] = end
     return obj
   }
@@ -787,19 +817,21 @@ export class Helpers {
   //
   // @method parsePath
   // @return {SVGPath}
-  parsePath(path) {
+  parsePath(path: string | SVGPathElement): PossiblyNullOrUndefined<SVGGeometryElement> {
     if (typeof path === 'string') {
       if (path.charAt(0).toLowerCase() === 'm') {
-        const domPath = document.createElementNS(this.NS, 'path')
+        const domPath = document.createElementNS(this.NS, 'path') as SVGPathElement
         domPath.setAttributeNS(null, 'd', path)
         return domPath
       } else {
-        return document.querySelector(path)
+        return document.querySelector<SVGPathElement>(path)
       }
     }
     if (path.style) {
       return path
     }
+
+    return undefined
   }
 
   // ---
@@ -808,7 +840,7 @@ export class Helpers {
   //
   // @method parsePath
   // @return {SVGPath}
-  closeEnough(num1, num2, eps) {
+  closeEnough(num1: number, num2: number, eps: number) {
     return Math.abs(num1 - num2) < eps
   }
 
@@ -819,17 +851,17 @@ export class Helpers {
     const div = document.createElement('div')
     this.style(div, 'transform', 'translateZ(0)')
     const { style } = div
-    const prefixed = `${this.prefix.css}transform`
+    const prefixed = `${this.prefix.css}transform` as keyof CSSStyleDeclaration
     const tr = style[prefixed] != null ? style[prefixed] : style.transform
     return tr !== ''
   }
 
   /*
-    Method to check if variable holds pointer to an object.
+    Method to check if a variable holds pointer to an object.
     @param {Any} Variable to test
     @returns {boolean} If variable is object.
   */
-  isObject(variable) {
+  isObject(variable: unknown) {
     return variable !== null && typeof variable === 'object'
   }
 
@@ -839,7 +871,7 @@ export class Helpers {
     @param {object} Object to get the value of.
     @returns {Any} The value of the first object' property.
   */
-  getDeltaEnd(obj) {
+  getDeltaEnd(obj: any) {
     const key = Object.keys(obj)[0]
     return obj[key]
   }
@@ -850,31 +882,28 @@ export class Helpers {
     @param {object} Object to get the value of.
     @returns {string} The key of the first object' property.
   */
-  getDeltaStart(obj) {
+  getDeltaStart(obj: any) {
     return Object.keys(obj)[0]
   }
 
   /*
-    Method to check if propery exists in callbacksMap or tweenOptionMap.
+    Method to check if property exists in callbacksMap or tweenOptionMap.
     @param {string} Property name to check for
     @returns {boolean} If property is tween property.
   */
-  isTweenProp(keyName) {
-    return this.tweenOptionMap[keyName] || this.callbacksMap[keyName]
+  isTweenProp(keyName: string) {
+    return this.tweenOptionMap[keyName as keyof TweenOptions] || this.callbacksMap[keyName as keyof Callbacks]
   }
 
-  /*
-    Method to parse string property value
-    which can include both `rand` and `stagger `
-    value in various positions.
-    @param {string} Property name to check for.
-    @param {number} Optional index for stagger.
-    @returns {number} Parsed option value.
+  /**
+    * Method to parse string property value
+    * which can include both `rand` and `stagger `
+    * value in various positions.
+    * @param {string} value Property name to check for.
+    * @param {number} index Optional index for stagger.
+    * @returns {number} Parsed option value.
   */
-  parseStringOption(value, index) {
-    if (index == null) {
-      index = 0
-    }
+  parseStringOption(value: PossibleUnit, index = 0): PossibleUnit {
     if (typeof value === 'string') {
       value = this.parseIfStagger(value, index)
       value = this.parseIfRand(value)
@@ -888,7 +917,7 @@ export class Helpers {
     @param {Array} arr to get the last item in.
     @returns {any} The last item of array.
   */
-  getLastItem<T = any>(arr): T {
+  getLastItem<T = any>(arr: T[]): T {
     return arr[arr.length - 1]
   }
 
@@ -898,17 +927,18 @@ export class Helpers {
    * @param {String, Object} el Selector string or HTMLElement.
    * @returns {object} HTMLElement.
    */
-  parseEl(el) {
+  parseEl(el: string | HTMLElement) {
+    let returnEl
     if (h.isDOM(el)) {
       return el
     } else if (typeof el === 'string') {
-      el = document.querySelector(el)
+      returnEl = document.querySelector(el)
     }
 
-    if (el === null) {
+    if (returnEl === null) {
       h.error("Can't parse HTML element: ", el)
     }
-    return el
+    return returnEl
   }
 
   /*
@@ -917,7 +947,7 @@ export class Helpers {
     @param {object} HTMLElement.
     @returns {object} HTMLElement.
   */
-  force3d(el) {
+  force3d(el: HTMLElement) {
     this.setPrefixedStyle(el, 'backface-visibility', 'hidden')
     return el
   }
@@ -928,9 +958,9 @@ export class Helpers {
     @param {Any} Property to check.
     @returns {boolean} If value is delta.
   */
-  isDelta(optionsValue) {
+  isDelta(optionsValue: unknown) {
     let isObject = this.isObject(optionsValue)
-    isObject = isObject && !optionsValue.unit
+    isObject = isObject && !(optionsValue as Record<any, any>).unit
     return !(
       !isObject ||
       Array.isArray(optionsValue) ||

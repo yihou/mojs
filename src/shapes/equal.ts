@@ -10,9 +10,9 @@
 import { default as Bit } from './bit'
 
 class Equal extends Bit {
-  _prevRadiusX
-  _prevRadiusY
-  _prevPoints
+  _prevRadiusX?: number
+  _prevRadiusY?: number
+  _prevPoints?: SVGPoint[]
 
   // shape: 'path'
   // ratio: 1.43
@@ -31,6 +31,10 @@ class Equal extends Bit {
     const p = this._props
     if (!this._props.points) {
       return
+    }
+
+    if (!this.el) {
+      throw new Error('"this.el" is not defined.')
     }
 
     const radiusX =

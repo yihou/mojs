@@ -8,7 +8,7 @@ import { Unit } from './types'
   - tweak then chains
 */
 
-class ShapeSwirl extends Shape {
+class ShapeSwirl extends Shape<{isSwirl: boolean}> {
   _posData
 
   /*

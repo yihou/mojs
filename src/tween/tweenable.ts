@@ -10,10 +10,10 @@ import Tween from './tween'
 
   @class Tweenable
 */
-class Tweenable extends Module {
-  timeline: Timeline | Tween
-  _isTimeline: boolean
-  tween: Tween
+class Tweenable<T> extends Module<Tweenable<T> & {isTweenLess: boolean, isTimelineLess: boolean, timeline?: Timeline, callbacksContext: any}> {
+  timeline?: Timeline | Tween<T>
+  tween?: Tween<T>
+  _isTimeline = false
 
   /*
     `play` method for the timeline.
@@ -21,8 +21,8 @@ class Tweenable extends Module {
     @param {number} Time shift.
     @returns this.
   */
-  play(shift?) {
-    this.timeline.play(shift)
+  play(shift?: number) {
+    this.timeline?.play(shift)
     return this
   }
 
@@ -32,8 +32,8 @@ class Tweenable extends Module {
     @param {number} Time shift.
     @returns this.
   */
-  playBackward(shift?) {
-    this.timeline.playBackward(shift)
+  playBackward(shift?: number) {
+    this.timeline?.playBackward(shift)
     return this
   }
 
@@ -43,7 +43,7 @@ class Tweenable extends Module {
     @returns this.
   */
   pause() {
-    this.timeline.pause()
+    this.timeline?.pause()
     return this
   }
 
@@ -55,8 +55,8 @@ class Tweenable extends Module {
                             and `1` if `playBackward`.
     @returns this.
   */
-  stop(progress) {
-    this.timeline.stop(progress)
+  stop(progress: number) {
+    this.timeline?.stop(progress)
     return this
   }
 
@@ -66,7 +66,7 @@ class Tweenable extends Module {
     @returns this.
   */
   reset() {
-    this.timeline.reset()
+    this.timeline?.reset()
     return this
   }
 
@@ -75,8 +75,8 @@ class Tweenable extends Module {
     @public
     @returns this.
   */
-  replay(shift?) {
-    this.timeline.replay(shift)
+  replay(shift?: number) {
+    this.timeline?.replay(shift)
     return this
   }
 
@@ -85,8 +85,8 @@ class Tweenable extends Module {
     @public
     @returns this.
   */
-  replayBackward(shift?) {
-    this.timeline.replayBackward(shift)
+  replayBackward(shift?: number) {
+    this.timeline?.replayBackward(shift)
     return this
   }
 
@@ -96,8 +96,8 @@ class Tweenable extends Module {
     @param {number} Time shift.
     @returns this.
   */
-  resume(shift?) {
-    this.timeline.resume(shift)
+  resume(shift?: number) {
+    this.timeline?.resume(shift)
     return this
   }
 
@@ -108,7 +108,7 @@ class Tweenable extends Module {
     @returns this.
   */
   setProgress(progress: number) {
-    this.timeline.setProgress(progress)
+    this.timeline?.setProgress(progress)
     return this
   }
 
@@ -117,8 +117,8 @@ class Tweenable extends Module {
     @param {number} Speed value.
     @returns this.
   */
-  setSpeed(speed) {
-    this.timeline.setSpeed(speed)
+  setSpeed(speed: number) {
+    this.timeline?.setSpeed(speed)
     return this
   }
 

@@ -7,6 +7,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 import h from '../h'
+import {Point, PossiblyNullOrUndefined} from '../types'
 
 // ## PathEasing
 // Class allows you to specify custom easing function
@@ -37,8 +38,8 @@ class PathEasing {
   _prevBounds
   _boundsStartIndex
   o
-  path
-  pathLength
+  path: PossiblyNullOrUndefined<SVGGeometryElement>
+  pathLength?: number
 
   // Method to create variables
   // @method _vars
@@ -54,7 +55,7 @@ class PathEasing {
   }
 
   // Constructor
-  constructor(path, o?) {
+  constructor(path: string, o?: any) {
     // the class can work as a "creator" of self instances
     // so no need to init if 'creator' passed instead of path
     if (o == null) {
@@ -78,9 +79,7 @@ class PathEasing {
     )
 
     this.pathLength = this.path.getTotalLength()
-
-    this.sample = h.bind(this.sample, this)
-    this._hardSample = h.bind(this._hardSample, this)
+    this._hardSample = this._hardSample.bind(this)
 
     // console.time 'pre sample'
     this._preSample()
@@ -96,6 +95,9 @@ class PathEasing {
   _preSample() {
     this._samples = []
     return (() => {
+      if (!this.path) {
+        throw new Error('"path" does not exist')
+      }
       const result: any[] = []
       for (
         let i = 0, end = this._precompute, asc = 0 <= end;
@@ -103,9 +105,9 @@ class PathEasing {
         asc ? i++ : i--
       ) {
         const progress = i * this._step
-        const length = this.pathLength * progress
+        const length = (this.pathLength as number) * progress
         const point = this.path.getPointAtLength(length)
-        this._samples[i] = { point, length, progress }
+        this._samples[i] = {point, length, progress}
         result.push(this._samples[i])
       }
       return result
@@ -114,27 +116,27 @@ class PathEasing {
 
   /**
    * @method _findBounds
-   * @param  {Array}   array to search in
-   * @param  {number}  p progress to search for
+   * @param  {Array} array to search in
+   * @param  {number} progress progress to search for
    * @return {object}
    *         - start {number}: lowest boundary
-   *         - end   {number}: highest boundary
+   *         - end {number}: highest boundary
    */
-  _findBounds(array, p) {
+  _findBounds(array: any[], progress: number) {
     let direction, end, loopEnd, start
-    if (p === this._boundsPrevProgress) {
+    if (progress === this._boundsPrevProgress) {
       return this._prevBounds
     }
     // get the start index in the array
     // reset the cached prev index if new progress
-    // is smaller then previous one or it is not defined
+    // is smaller than previous one, or it is not defined
     if (this._boundsStartIndex == null) {
       this._boundsStartIndex = 0
     }
 
     const len = array.length
     // get start and end indexes of the loop and save the direction
-    if (this._boundsPrevProgress > p) {
+    if (this._boundsPrevProgress > progress) {
       loopEnd = 0
       direction = 'reverse'
     } else {
@@ -162,7 +164,7 @@ class PathEasing {
     ) {
       const value = array[i]
       let pointX = value.point.x / this._rect
-      let pointP = p
+      let pointP = progress
       // if direction is reverse swap pointX and pointP
       // for if statement
       if (direction === 'reverse') {
@@ -184,12 +186,12 @@ class PathEasing {
         break
       }
     }
-    this._boundsPrevProgress = p
+    this._boundsPrevProgress = progress
     // return the first item if start wasn't found
     // start ?= array[0]
     // end   ?= array[array.length-1]
 
-    return (this._prevBounds = { start, end })
+    return (this._prevBounds = {start, end})
   }
 
   /**
@@ -200,7 +202,7 @@ class PathEasing {
    * @param  {number} p easing progress in range [0,1]
    * @return {number} easing y
    */
-  sample(p) {
+  sample = (p: number) => {
     p = h.clamp(p, 0, 1)
     const bounds = this._findBounds(this._samples, p)
     const res = this._checkIfBoundsCloseEnough(p, bounds)
@@ -215,30 +217,30 @@ class PathEasing {
    * is close enough to searched progress
    *
    * @method _checkIfBoundsCloseEnough
-   * @param  {number} p progress
+   * @param  {number} progress progress
    * @param  {object} bounds
    * @return {Number, Undefined} returns Y value if true, undefined if false
    */
-  _checkIfBoundsCloseEnough(p, bounds) {
+  _checkIfBoundsCloseEnough(progress: number, bounds: any) {
     // check if start bound is close enough
-    const y = this._checkIfPointCloseEnough(p, bounds.start.point)
+    const y = this._checkIfPointCloseEnough(progress, bounds.start.point)
     if (y != null) {
       return y
     }
     // check if end bound is close enough
-    return this._checkIfPointCloseEnough(p, bounds.end.point)
+    return this._checkIfPointCloseEnough(progress, bounds.end.point)
   }
 
   /**
    * Check if bound point close enough to progress
    *
    * @method _checkIfPointCloseEnough
-   * @param  {number} p progress
+   * @param  {number} progress
    * @param  {object} point bound point (start or end)
    * @return {Number, Undefined} returns Y value if true, undefined if false
    */
-  _checkIfPointCloseEnough(p, point): number | undefined {
-    if (h.closeEnough(p, point.x / this._rect, this._eps)) {
+  _checkIfPointCloseEnough(progress: number, point: Point): number | undefined {
+    if (h.closeEnough(progress, point.x / this._rect, this._eps)) {
       return this._resolveY(point)
     }
 
@@ -249,32 +251,36 @@ class PathEasing {
    * @method _approximate
    * @param  {object} start point object
    * @param  {object} end point object
-   * @param  {number} p progress to search
+   * @param  {number} progress progress to search
    * @return {object} approximation
    */
-  _approximate(start, end, p) {
+  _approximate(start: Point, end: Point, progress: number) {
     const deltaP = end.point.x - start.point.x
-    const percentP = (p - start.point.x / this._rect) / (deltaP / this._rect)
+    const percentP = (progress - start.point.x / this._rect) / (deltaP / this._rect)
     return start.length + percentP * (end.length - start.length)
   }
 
   /**
    * @method _findApproximate
-   * @param  {number} p progress to search for
+   * @param  {number} progress progress to search for
    * @param  {object} start point object
    * @param  {object} end point object
    * @param approximateMax
    * @return {number} y approximation
    */
-  _findApproximate(p, start, end, approximateMax?) {
+  _findApproximate(progress: number, start: Point, end: Point, approximateMax: number = this._approximateMax): number {
+    if (this.path == null) {
+      throw new Error('Error while parsing the path')
+    }
+
     if (approximateMax == null) {
       approximateMax = this._approximateMax
     }
-    const approximation = this._approximate(start, end, p)
+    const approximation = this._approximate(start, end, progress)
     const point = this.path.getPointAtLength(approximation)
     const x = point.x / this._rect
     // if close enough resolve the y value
-    if (h.closeEnough(p, x, this._eps)) {
+    if (h.closeEnough(progress, x, this._eps)) {
       return this._resolveY(point)
     } else {
       // if looping for a long time
@@ -283,11 +289,11 @@ class PathEasing {
       }
       // not precise enough so we will call self
       // again recursively, lets find arguments for the call
-      const newPoint = { point, length: approximation }
+      const newPoint = {point, length: approximation}
       const args =
-        p < x
-          ? [p, start, newPoint, approximateMax]
-          : [p, newPoint, end, approximateMax]
+        progress < x
+          ? [progress, start, newPoint, approximateMax]
+          : [progress, newPoint, end, approximateMax]
       return this._findApproximate(args[0], args[1], args[2], args[3])
     }
   }
@@ -297,7 +303,7 @@ class PathEasing {
    * @param  {object} point SVG point
    * @return {number} normalized y
    */
-  _resolveY(point) {
+  _resolveY(point: SVGPoint) {
     return 1 - point.y / this._rect
   }
 
@@ -307,7 +313,7 @@ class PathEasing {
    * @param  {string} path Path coordinates to normalize
    * @return {string} Normalized path coordinates
    */
-  _normalizePath(path) {
+  _normalizePath(path: string) {
     // SVG path commands
     const svgCommandsRegexp = /[M|LHVCSQTA]/gim
     const points = path.split(svgCommandsRegexp)
@@ -336,7 +342,7 @@ class PathEasing {
    * @param {any[]} points Points array.
    * @return {string} Formed normalized path.
    */
-  _joinNormalizedPath(commands, points): string {
+  _joinNormalizedPath(commands: unknown[], points: Point[]): string {
     let normalizedPath = ''
     for (let i = 0; i < commands.length; i++) {
       const command = commands[i]

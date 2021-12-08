@@ -3,16 +3,12 @@ import h from './h'
 import Thenable from './thenable'
 import Timeline from './tween/timeline'
 import Tween from './tween/tween'
+import {PossibleUnit, TweenDefaults, UnitOptions} from './types'
+
+type TweenProps = Record<keyof TweenDefaults | 'curve', PossibleUnit>
 
 // get tween properties
-const obj: Partial<Pick<Tween, '_defaults'>> = {}
-Tween.prototype._declareDefaults.call(obj)
-const keys = Object.keys(obj._defaults)
-for (let i = 0; i < keys.length; i++) {
-  obj._defaults[keys[i]] = 1
-}
-obj._defaults['timeline'] = 1
-const TWEEN_PROPERTIES = obj._defaults
+const TWEEN_PROPERTIES = Tween.getDefaultProperties()
 
 /*
   TODO:
@@ -21,7 +17,7 @@ const TWEEN_PROPERTIES = obj._defaults
     - current values in deltas
 */
 
-class Html extends Thenable {
+class Html<T> extends Thenable<T> {
   _drawExclude
   _3dProperties
   _arrayPropertyMap
@@ -341,7 +337,7 @@ class Html extends Thenable {
     @param {string} Option name.
     @param {Any} Option value.
   */
-  _parseOption(key, value) {
+  _parseOption(key: string, value: any) {
     super._parseOption(key, value)
 
     // at this point the property is parsed
@@ -524,16 +520,16 @@ class Html extends Thenable {
     @param {Any}    End value of the property.
   */
   // !! COVER !!
-  _mergeThenProperty(key, startValue, endValue) {
+  _mergeThenProperty(key: string, startValue: any, endValue: any) {
     // if isnt tween property
     const isBoolean = typeof endValue === 'boolean'
 
     if (!h.isTweenProp(key) && !this._nonMergeProps[key] && !isBoolean) {
-      const TWEEN_PROPS = {}
+      const TWEEN_PROPS: Partial<TweenProps> = {}
       if (h.isObject(endValue) && endValue.to != null) {
         for (const key in endValue) {
-          if (TWEEN_PROPERTIES[key] || key === 'curve') {
-            TWEEN_PROPS[key] = endValue[key]
+          if (TWEEN_PROPERTIES[key as keyof TweenDefaults] || key === 'curve') {
+            TWEEN_PROPS[key as keyof TweenProps] = endValue[key]
             delete endValue[key]
           }
         }
@@ -545,18 +541,18 @@ class Html extends Thenable {
 
       // if end value is delta - just save it
       if (this._isDelta(endValue)) {
-        const TWEEN_PROPS = {}
+        const TWEEN_PROPS: Partial<TweenProps> = {}
         for (const key in endValue) {
-          if (TWEEN_PROPERTIES[key] || key === 'curve') {
-            TWEEN_PROPS[key] = endValue[key]
+          if (TWEEN_PROPERTIES[key as keyof TweenDefaults] || key === 'curve') {
+            TWEEN_PROPS[key as keyof TweenProps] = endValue[key]
             delete endValue[key]
           }
         }
-        const result = this._parseDeltaValues(key, endValue)
+        const result = this._parseDeltaValues(key as keyof UnitOptions, endValue)
 
         return { ...result, ...TWEEN_PROPS }
       } else {
-        const parsedEndValue = this._parsePreArrayProperty(key, endValue)
+        const parsedEndValue = this._parsePreArrayProperty(key as keyof UnitOptions, endValue)
 
         // if end value is not delta - merge with start value
         if (this._isDelta(startValue)) {

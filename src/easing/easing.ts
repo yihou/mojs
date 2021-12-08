@@ -6,6 +6,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 import h from '../h'
+import {EasingValue} from '../types'
 
 import { approximateSample } from './approximate'
 import bezier from './bezier-easing'
@@ -270,7 +271,7 @@ export class Easing {
 
   // Method to inverse the easing value
   // @param {number} Value to inverse
-  // @return {number} Inversed value
+  // @return {number} Inverse value
   inverse(p: number) {
     return 1 - p
   }
@@ -293,7 +294,7 @@ export class Easing {
    *
    * @return {Function}
    */
-  parseEasing(easing: string | (() => string) | number[]) {
+  parseEasing(easing: EasingValue) {
     if (easing == null) {
       easing = 'linear.none'
     }
@@ -302,8 +303,8 @@ export class Easing {
       if (easing.charAt(0).toLowerCase() === 'm') {
         return this.path(easing)
       } else {
-        easing = this._splitEasing(easing) as number[]
-        const easingParent = this[easing[0]]
+        easing = this._splitEasing(easing) as any[]
+        const easingParent = (this as any)[easing[0]]
         if (!easingParent) {
           h.error(
             `Easing with name "${easing[0]}" was not found, fallback to "linear.none" instead`

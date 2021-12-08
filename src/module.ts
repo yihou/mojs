@@ -1,35 +1,49 @@
+import get from 'lodash.get'
+
 import h from './h'
-import {Unit} from './types'
+import {
+  ArrayDelta,
+  ColorDelta,
+  DeltaType,
+  ModuleBaseObj,
+  NumberDelta,
+  PossibleUnit,
+  PropertyMap,
+  SkipPropsDelta,
+  Unit,
+  UnitDelta,
+  UnitOptions
+} from './types'
 
 /*
   Base class for module. Extends and parses defaults.
 */
-export class Module {
-  _o
+export class Module<T, D = T> {
+  _o: Partial<T & Partial<ModuleBaseObj>>
   _index = 0
 
   // map of props that should be
-  // parsed to arrays of values
-  _arrayPropertyMap: any = {
+  // parsed to array of values
+  _arrayPropertyMap: PropertyMap = {
     strokeDashoffset: 1,
     strokeDasharray: 1,
     origin: 1
   }
-  _skipPropsDelta = {
+  _skipPropsDelta: SkipPropsDelta = {
     timeline: 1,
     prevChainModule: 1,
     callbacksContext: 1
   }
-  _defaults: any = {}
+  _defaults: Partial<T & ModuleBaseObj & D> = {}
   _progress: any = 0
   _strokeDasharrayBuffer = []
-  _props
-  _isShown
-  _deltas
+  _props: any
+  _isShown = false
+  _deltas: Record<string, DeltaType> = {}
 
-  el
+  el?: SVGGeometryElement = undefined
 
-  constructor(o = {}) {
+  constructor(o: Partial<T> = {}) {
     // this._isIt = o.isIt;
     // delete o.isIt;
     this._o = o
@@ -46,9 +60,7 @@ export class Module {
    * Method to declare defaults.
    * @private
    */
-  _declareDefaults() {
-    this._defaults = {}
-  }
+  _declareDefaults() {}
 
   /**
    * Method to declare module's variables.
@@ -63,7 +75,8 @@ export class Module {
    * Method to render on initialization.
    * @private
    */
-  _render() {}
+  _render() {
+  }
 
   /**
    * Method to set property on the module.
@@ -73,7 +86,7 @@ export class Module {
    * @param {any} value Value for the property to set.
    * Could be undefined if the first param is object.
    */
-  _setProp(attr, value) {
+  _setProp(attr: string | Record<any, any>, value: any) {
     if (typeof attr === 'object') {
       for (const key in attr) {
         this._assignProp(key, attr[key])
@@ -89,14 +102,14 @@ export class Module {
    * @param {string} key Property name.
    * @param {any}    value Property value.
    */
-  _assignProp(key, value) {
+  _assignProp(key: string, value: any) {
     this._props[key] = value
   }
 
   /**
-    Method to show element.
-    @private
-  */
+   Method to show element.
+   @private
+   */
   _show() {
     const p = this._props
     if (!this.el) {
@@ -114,9 +127,9 @@ export class Module {
   }
 
   /**
-    Method to hide element.
-    @private
-  */
+   Method to hide element.
+   @private
+   */
   _hide() {
     if (!this.el) {
       return
@@ -133,19 +146,20 @@ export class Module {
   }
 
   /**
-    Method to show element by applying transform back to normal.
-    @private
-  */
-  _showByTransform() {}
+   Method to show element by applying transform back to normal.
+   @private
+   */
+  _showByTransform() {
+  }
 
   /**
-    Method to parse option string.
-    Searches for stagger and rand values and parses them.
-    Leaves the value unattended otherwise.
-    @param {any} value Option value to parse.
-    @returns {number} Parsed options value.
-  */
-  _parseOptionString(value) {
+   Method to parse option string.
+   Searches for stagger and rand values and parses them.
+   Leaves the value unattended otherwise.
+   @param {any} value Option value to parse.
+   @returns {number} Parsed options value.
+   */
+  _parseOptionString(value: any) {
     if (typeof value === 'string') {
       if (value.match(/stagger/)) {
         value = h.parseStagger(value, this._index)
@@ -165,7 +179,7 @@ export class Module {
    * @param {any} value Property Value.
    * @returns {string} Parsed options value.
    */
-  _parsePositionOption(key, value) {
+  _parsePositionOption(key: keyof UnitOptions, value: any) {
     if (h.unitOptionMap[key]) {
       const unit = h.parseUnit(value)
 
@@ -183,7 +197,7 @@ export class Module {
    * @param {any} value Property value.
    * @returns {string} Parsed options value.
    */
-  _parseStrokeDashOption(key, value) {
+  _parseStrokeDashOption(key: keyof PropertyMap, value: any) {
     let result = value
 
     // parse numeric/percent values for strokeDash.. properties
@@ -207,25 +221,25 @@ export class Module {
   }
 
   /**
-    Method to check if the property is delta property.
-    @private
-    @param {any} optionsValue Parameter value to check.
-    @returns {boolean}
-  */
-  _isDelta(optionsValue) {
+   Method to check if the property is delta property.
+   @private
+   @param {any} optionsValue Parameter value to check.
+   @returns {boolean}
+   */
+  _isDelta(optionsValue: PossibleUnit) {
     let isObject = h.isObject(optionsValue)
-    isObject = isObject && !optionsValue.unit
+    isObject = isObject && !(optionsValue as Unit).unit
     return !(!isObject || Array.isArray(optionsValue) || h.isDOM(optionsValue))
   }
 
   /**
-    Method to get delta from property and set
-    the property's start value to the props object.
-    @private
-    @param {string} key Key name to get delta for.
-    @param {object} optionsValue Option value to get the delta for.
-  */
-  _getDelta(key, optionsValue) {
+   Method to get delta from property and set
+   the property's start value to the props object.
+   @private
+   @param {string} key Key name to get delta for.
+   @param {object} optionsValue Option value to get the delta for.
+   */
+  _getDelta(key: string, optionsValue: PossibleUnit) {
     if ((key === 'left' || key === 'top') && !this._o.ctx) {
       h.warn(
         `Consider to animate x/y properties instead of left/top,
@@ -236,7 +250,7 @@ export class Module {
 
     // skip delta calculation for a property if it is listed
     // in skipPropsDelta object
-    if (this._skipPropsDelta && this._skipPropsDelta[key]) {
+    if (this._skipPropsDelta && this._skipPropsDelta[key as keyof SkipPropsDelta]) {
       return
     }
 
@@ -266,10 +280,10 @@ export class Module {
   }
 
   /**
-    Method to copy `_o` options to `_props` object
-    with fallback to `_defaults`.
-    @private
-  */
+   Method to copy `_o` options to `_props` object
+   with fallback to `_defaults`.
+   @private
+   */
   _extendDefaults() {
     this._props = {}
     this._deltas = {}
@@ -277,7 +291,7 @@ export class Module {
       // skip property if it is listed in _skipProps
       // if (this._skipProps && this._skipProps[key]) { continue; }
       // copy the properties to the _o object
-      const value = this._o[key] != null ? this._o[key] : this._defaults[key]
+      const value = this._o[key as keyof T] ?? this._defaults[key as keyof T]
 
       // parse option
       this._parseOption(key, value)
@@ -289,8 +303,8 @@ export class Module {
    * @private
    * @param {object} o Options object to tune to.
    */
-  _tuneNewOptions(o): void | undefined | number {
-    // hide the module before tuning it's options
+  _tuneNewOptions(o: Partial<T>): void | undefined | number {
+    // hide the module before tuning its options
     // cuz the user could see the change
     this._hide()
     for (const key in o) {
@@ -314,15 +328,15 @@ export class Module {
    * @param {string} name Option name.
    * @param {any} value Option value.
    */
-  _parseOption(name, value) {
+  _parseOption(name: string, value: any) {
     // if delta property
-    if (this._isDelta(value) && !this._skipPropsDelta[name]) {
+    if (this._isDelta(value) && !this._skipPropsDelta[name as keyof SkipPropsDelta]) {
       this._getDelta(name, value)
       const deltaEnd = h.getDeltaEnd(value)
-      return this._assignProp(name, this._parseProperty(name, deltaEnd))
+      return this._assignProp(name, this._parseProperty(name as keyof UnitOptions, deltaEnd))
     }
 
-    this._assignProp(name, this._parseProperty(name, value))
+    this._assignProp(name, this._parseProperty(name as keyof UnitOptions, value))
   }
 
   /**
@@ -332,7 +346,7 @@ export class Module {
    * @param {any}    value Property value.
    * @returns {any}  Parsed property value.
    */
-  _parsePreArrayProperty(name, value) {
+  _parsePreArrayProperty(name: keyof UnitOptions, value: any): string {
     // parse stagger and rand values
     value = this._parseOptionString(value)
 
@@ -347,7 +361,7 @@ export class Module {
    * @param {any}    value Property value.
    * @returns {any}  Parsed property value.
    */
-  _parseProperty(name, value) {
+  _parseProperty(name: keyof UnitOptions | 'parent', value: any) {
     // parse `HTML` element in `parent` option
     if (name === 'parent') {
       return h.parseEl(value)
@@ -357,22 +371,23 @@ export class Module {
     value = this._parsePreArrayProperty(name, value)
 
     // parse numeric/percent values for strokeDash.. properties
-    return this._parseStrokeDashOption(name, value)
+    return this._parseStrokeDashOption(name as keyof PropertyMap, value)
   }
 
   /**
    * Method to parse values inside ∆.
+   * TODO: revisit to define proper types
    * @private
    * @param {string} name Key name.
    * @param {object} delta Delta.
    * @returns {object} Delta with parsed parameters.
    */
-  _parseDeltaValues(name, delta) {
+  _parseDeltaValues(name: keyof UnitOptions, delta: DeltaType) {
     // return h.parseDelta( name, delta, this._index );
 
-    const d = {}
+    const d: Record<string, any> = {}
     for (const key in delta) {
-      const value = delta[key]
+      const value = delta[key as keyof DeltaType]
 
       // delete delta[key];
       // add parsed properties
@@ -388,10 +403,10 @@ export class Module {
    * Method to parse delta and non-delta properties.
    * @private
    * @param {string} key Property name.
-   * @param {any}    value Property value.
-   * @returns {any}  Parsed property value.
+   * @param {any} value Property value.
+   * @returns {any} Parsed property value.
    */
-  _preparsePropValue(key, value) {
+  _preparsePropValue(key: keyof UnitOptions, value: any) {
     return this._isDelta(value)
       ? this._parseDeltaValues(key, value)
       : this._parsePreArrayProperty(key, value)
@@ -401,16 +416,16 @@ export class Module {
    * Method to calculate current progress of the deltas.
    * @private
    * @param {number} easedProgress Eased progress to calculate - [0..1].
-   * @param {number} p Progress to calculate - [0..1].
+   * @param {number} progress Progress to calculate - [0..1].
    */
-  _calcCurrentProps(easedProgress, p) {
+  _calcCurrentProps(easedProgress: number, progress: number) {
     for (const key in this._deltas) {
       const value = this._deltas[key]
 
       // get eased progress from delta easing if defined and not curve
       const isCurve = !!value.curve
       const ep =
-        value.easing != null && !isCurve ? value.easing(p) : easedProgress
+        value.easing != null && !isCurve ? (value.easing as any)(progress) : easedProgress
 
       if (value.type === 'array') {
         let arr
@@ -425,54 +440,87 @@ export class Module {
 
         // just optimization to prevent curve
         // calculations on every array item
-        const proc = isCurve ? value.curve(p) : null
+        const proc = isCurve ? value.curve(progress) : null
+        const arrayDelta = value.delta as ArrayDelta['delta']
 
-        for (let i = 0; i < value.delta.length; i++) {
-          const item = value.delta[i],
-            dash = !isCurve
-              ? value.start[i].value + ep * item.value
-              : proc * (value.start[i].value + p * item.value)
+        for (let i = 0; i < arrayDelta.length; i++) {
+          const item = arrayDelta[i]
+          let dash: number
+          if (!isCurve) {
+            dash = get((value.start as any[])[i], 'value') + ep * (item as any).value
+          } else {
+            dash = proc * ((value.start as any[])[i].value + progress * (item as any).value)
+          }
           arr.push({
-            string: `${dash}${item.unit}`,
+            string: `${dash}${(item as Unit).unit}`,
             value: dash,
-            unit: item.unit
+            unit: (item as Unit).unit
           })
         }
 
         this._props[key] = arr
       } else if (value.type === 'number') {
-        this._props[key] = !isCurve
-          ? value.start + ep * value.delta
-          : value.curve(p) * (value.start + p * value.delta)
+        const numberDelta = value as NumberDelta
+        if (!isCurve) {
+          this._props[key] = numberDelta.start + ep * numberDelta.delta
+        } else {
+          this._props[key] = value.curve(progress) * (numberDelta.start + progress * numberDelta.delta)
+        }
       } else if (value.type === 'unit') {
-        const currentValue = !isCurve
-          ? value.start.value + ep * value.delta
-          : value.curve(p) * (value.start.value + p * value.delta)
+        const unitDelta = value as UnitDelta
+        let currentValue: any
+        if (!isCurve) {
+          currentValue = ((unitDelta.start as Unit).value as number) + ep * (value.delta as number)
+        } else {
+          currentValue = value.curve(progress) * (((value.start as Unit).value as number) + progress * (value.delta as number))
+        }
 
-        this._props[key] = `${currentValue}${value.end.unit}`
+        this._props[key] = `${currentValue}${(value.end as Unit).unit}`
       } else if (value.type === 'color') {
         let r, g, b, a
+        const colorDelta = value as ColorDelta
+
+        if (
+          typeof colorDelta.start.r !== 'number' ||
+          typeof colorDelta.start.g !== 'number' ||
+          typeof colorDelta.start.b !== 'number' ||
+          typeof colorDelta.start.a !== 'number'
+        ) {
+          throw new Error(`"colorDelta.start" color is not a valid color`)
+        }
+
         if (!isCurve) {
-          r = parseInt(value.start.r + ep * value.delta.r, 10)
-          g = parseInt(value.start.g + ep * value.delta.g, 10)
-          b = parseInt(value.start.b + ep * value.delta.b, 10)
-          a = parseFloat(value.start.a + ep * value.delta.a)
+          r = parseInt((colorDelta.start.r + ep * colorDelta.delta.r) as any, 10)
+          g = parseInt((colorDelta.start.g + ep * colorDelta.delta.g) as any, 10)
+          b = parseInt((colorDelta.start.b + ep * colorDelta.delta.b) as any, 10)
+          a = parseFloat((colorDelta.start.a + ep * colorDelta.delta.a) as any)
         } else {
-          const cp = value.curve(p)
+          const cp = value.curve(progress)
+          const colorDelta = value as ColorDelta
+
+          if (
+            typeof colorDelta.start.r !== 'number' ||
+            typeof colorDelta.start.g !== 'number' ||
+            typeof colorDelta.start.b !== 'number' ||
+            typeof colorDelta.start.a !== 'number'
+          ) {
+            throw new Error(`"colorDelta.start" color is not a valid color`)
+          }
+
           r = parseInt(
-            (cp * (value.start.r + p * value.delta.r)) as any as string,
+            (cp * (colorDelta.start.r + progress * colorDelta.delta.r)) as any,
             10
           )
           g = parseInt(
-            (cp * (value.start.g + p * value.delta.g)) as any as string,
+            (cp * (colorDelta.start.g + progress * colorDelta.delta.g)) as any,
             10
           )
           b = parseInt(
-            (cp * (value.start.b + p * value.delta.b)) as any as string,
+            (cp * (colorDelta.start.b + progress * colorDelta.delta.b)) as any,
             10
           )
           a = parseFloat(
-            (cp * (value.start.a + p * value.delta.a)) as any as string
+            (cp * (colorDelta.start.a + progress * colorDelta.delta.a)) as any
           )
         }
         this._props[key] = `rgba(${r},${g},${b},${a})`
@@ -488,7 +536,7 @@ export class Module {
    * @param _isYoyo
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _setProgress(easedProgress, progress, _isYoyo?) {
+  _setProgress(easedProgress: number, progress: number, _isYoyo?: boolean) {
     this._progress = easedProgress
     this._calcCurrentProps(easedProgress, progress)
   }

@@ -1,15 +1,16 @@
 import h from './h'
 import Thenable from './thenable'
 import Timeline from './tween/timeline'
+import {UnitOptions} from './types'
 
-class Tuneable extends Thenable {
+class Tuneable<T> extends Thenable<T> {
   /*
     Method to start the animation with optional new options.
     @public
     @param {object} New options to set on the run.
     @returns {object} this.
   */
-  tune(o) {
+  tune(o: Partial<T>) {
     // if options object was passed
     if (o && Object.keys(o).length) {
       this._transformHistory(o)
@@ -21,8 +22,8 @@ class Tuneable extends Thenable {
       // and merge in history chains
       this._history[0] = h.cloneObj(this._props)
       for (const key in this._arrayPropertyMap) {
-        if (o[key] != null) {
-          this._history[0][key] = this._preparsePropValue(key, o[key])
+        if (o[key as keyof T] != null) {
+          this._history[0][key] = this._preparsePropValue(key as keyof UnitOptions, o[key as keyof T])
         }
       }
 

@@ -36,6 +36,10 @@ class Curve extends Bit {
       return
     }
 
+    if (!this.el) {
+      throw new Error('"this.el" is not defined.')
+    }
+
     const x = p.width / 2
     const y = p.height / 2
     const x1 = x - radiusX

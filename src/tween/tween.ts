@@ -1,117 +1,105 @@
 import easing from '../easing/easing'
 import Module from '../module'
+import {PossiblyUndefined, TweenDefaults, TweenState} from '../types'
 
 import tweener from './tweener'
 
-interface TweenDefaults {
-  duration: number
-  delay: number
-  repeat: number
-  speed: number
-  isYoyo: boolean
-  easing: string
-  backwardEasing: any | null
-  name: null | string
-  nameBase: string
-  onProgress: (() => void) | null
-  onStart: (() => void) | null
-  onRefresh: (() => void) | null
-  onComplete: (() => void) | null
-  onRepeatStart: (() => void) | null
-  onRepeatComplete: (() => void) | null
-  onFirstUpdate: (() => void) | null
-  onUpdate: (() => void) | null
-  isChained: boolean
-  onPlaybackStart: (() => void) | null
-  onPlaybackPause: (() => void) | null
-  onPlaybackStop: (() => void) | null
-  onPlaybackComplete: (() => void) | null
-  callbacksContext: any | null
-}
+class Tween<T> extends Module<T> {
+  _defaults: TweenDefaults = {
+    /* duration of the tween [0..∞] */
+    duration: 350,
 
-class Tween extends Module {
+    /* delay of the tween [-∞..∞] */
+    delay: 0,
+
+    /* repeat of the tween [0..∞], means how much to
+       repeat the tween regardless first run,
+       for instance repeat 2 will make the tween run 3 times */
+    repeat: 0,
+
+    /* speed of playback [0..∞], speed that is less then 1
+       will slowdown playback, for instance .5 will make tween
+       run 2x slower. Speed of 2 will speedup the tween to 2x. */
+    speed: 1,
+
+    /*  flip onUpdate's progress on each even period.
+        note that callbacks order won't flip at least
+        for now (under consideration). */
+    isYoyo: false,
+
+    /* easing for the tween, could be any easing type [link to easing-types.md] */
+    easing: 'Sin.Out',
+
+    /*
+      Easing for backward direction of the tween the tween,
+      if `null` - fallbacks to `easing` property.
+      forward direction in `yoyo` period is treated as backward for the easing.
+    */
+    backwardEasing: null,
+
+    /* custom tween's name */
+    name: null,
+
+    /* custom tween's base name */
+    nameBase: 'Tween',
+
+    /*
+      onProgress callback runs before any other callback.
+      @param {number}   The entire, not eased, progress
+                        of the tween regarding repeat option.
+      @param {boolean}  The direction of the tween.
+                        `true` for forward direction.
+                        `false` for backward direction(tween runs in reverse).
+    */
+    onProgress: null,
+
+    /*
+      onStart callback runs on very start of the tween just after onProgress
+      one. Runs on very end of the tween if tween is reversed.
+      @param {boolean}  Direction of the tween.
+                        `true` for forward direction.
+                        `false` for backward direction(tween runs in reverse).
+    */
+    onStart: null,
+    onRefresh: null,
+    onComplete: null,
+    onRepeatStart: null,
+    onRepeatComplete: null,
+    onFirstUpdate: null,
+    onUpdate: null,
+    isChained: false,
+
+    // playback callbacks
+    onPlaybackStart: null,
+    onPlaybackPause: null,
+    onPlaybackStop: null,
+    onPlaybackComplete: null,
+
+    // context which all callbacks will be called with
+    callbacksContext: null
+  }
+
   /*
     Method do declare defaults with this._defaults object.
     @private
   */
-  _declareDefaults() {
-    // DEFAULTS
-    this._defaults = {
-      /* duration of the tween [0..∞] */
-      duration: 350,
+  // _declareDefaults() {
+  //   // DEFAULTS
+  //   this._defaults =
+  // }
+  static getDefaultProperties(): Record<keyof TweenDefaults | 'timeline', number> {
+    const obj: Partial<Record<keyof TweenDefaults | 'timeline', number>> = {};
+    const keys = Object.keys(Tween.prototype._defaults);
 
-      /* delay of the tween [-∞..∞] */
-      delay: 0,
+    for (let i = 0; i < keys.length; i++) {
+      obj[keys[i] as keyof TweenDefaults] = 1;
+    }
+    obj.timeline = 1;
 
-      /* repeat of the tween [0..∞], means how much to
-         repeat the tween regardless first run,
-         for instance repeat 2 will make the tween run 3 times */
-      repeat: 0,
-
-      /* speed of playback [0..∞], speed that is less then 1
-         will slowdown playback, for instance .5 will make tween
-         run 2x slower. Speed of 2 will speedup the tween to 2x. */
-      speed: 1,
-
-      /*  flip onUpdate's progress on each even period.
-          note that callbacks order won't flip at least
-          for now (under consideration). */
-      isYoyo: false,
-
-      /* easing for the tween, could be any easing type [link to easing-types.md] */
-      easing: 'Sin.Out',
-
-      /*
-        Easing for backward direction of the tween the tween,
-        if `null` - fallbacks to `easing` property.
-        forward direction in `yoyo` period is treated as backward for the easing.
-      */
-      backwardEasing: null,
-
-      /* custom tween's name */
-      name: null,
-
-      /* custom tween's base name */
-      nameBase: 'Tween',
-
-      /*
-        onProgress callback runs before any other callback.
-        @param {number}   The entire, not eased, progress
-                          of the tween regarding repeat option.
-        @param {boolean}  The direction of the tween.
-                          `true` for forward direction.
-                          `false` for backward direction(tween runs in reverse).
-      */
-      onProgress: null,
-
-      /*
-        onStart callback runs on very start of the tween just after onProgress
-        one. Runs on very end of the tween if tween is reversed.
-        @param {boolean}  Direction of the tween.
-                          `true` for forward direction.
-                          `false` for backward direction(tween runs in reverse).
-      */
-      onStart: null,
-      onRefresh: null,
-      onComplete: null,
-      onRepeatStart: null,
-      onRepeatComplete: null,
-      onFirstUpdate: null,
-      onUpdate: null,
-      isChained: false,
-
-      // playback callbacks
-      onPlaybackStart: null,
-      onPlaybackPause: null,
-      onPlaybackStop: null,
-      onPlaybackComplete: null,
-
-      // context which all callbacks will be called with
-      callbacksContext: null
-    } as TweenDefaults
+    return obj as Record<keyof TweenDefaults | 'timeline', number>
   }
 
-  _state: 'pause' | 'play' | 'reverse' | 'stop' | undefined
+  _state: PossiblyUndefined<TweenState>
   _isRunning = false
   _wasUknownUpdate: any | undefined
   _playTime: any | undefined
@@ -263,7 +251,7 @@ class Tween extends Module {
     @param {number} Progress to set.
     @returns {object} Self.
   */
-  setProgress(progress) {
+  setProgress(progress: number) {
     const p = this._props
 
     // set start time if there is no one yet.
@@ -287,7 +275,7 @@ class Tween extends Module {
     @param {number} Speed value.
     @returns this.
   */
-  setSpeed(speed) {
+  setSpeed(speed: number) {
     this._props.speed = speed
 
     // if playing - normalize _startTime and _prevTime to the current point.
@@ -329,7 +317,7 @@ class Tween extends Module {
     @param  {string} Play or reverse state.
     @return {object} Self.
   */
-  _subPlay(shift = 0, state) {
+  _subPlay(shift = 0, state: TweenState) {
     const p = this._props,
       // check if direction of playback changes,
       // if so, the _progressTime needs to be flipped
@@ -365,7 +353,7 @@ class Tween extends Module {
     @param {string} Current state. [play, reverse]
     @param {number} Time shift. *Default* is 0.
   */
-  _setResumeTime(state, shift = 0) {
+  _setResumeTime(state: TweenState, shift = 0) {
     // get current moment as resume time
     this._resumeTime = performance.now()
 
@@ -408,11 +396,14 @@ class Tween extends Module {
     @private
   */
   _setSelfName() {
-    const globalName = `_${this._props.nameBase}s`
+    const globalName = `_${this._props.nameBase}s` as '_Tweens' | '_Timelines'
 
     // track amount of tweens globally
-    tweener[globalName] =
-      tweener[globalName] == null ? 1 : ++tweener[globalName]
+    if (tweener[globalName] == null) {
+      tweener[globalName] = 1
+    } else {
+      tweener[globalName] = ++tweener[globalName]
+    }
 
     // and set generic tween's name  || Tween # ||
     this._props.name = `${this._props.nameBase} ${tweener[globalName]}`
@@ -423,7 +414,7 @@ class Tween extends Module {
     @private
     @param {string} State name
   */
-  _setPlaybackState(state) {
+  _setPlaybackState(state: TweenState) {
     // save previous state
     this._prevState = this._state
     this._state = state
@@ -550,7 +541,7 @@ class Tween extends Module {
                     0 = no edge jump.
                     1 = edge jump in positive direction.
   */
-  _update(time, timelinePrevTime?, wasYoyo?, onEdge?) {
+  _update(time: number, timelinePrevTime?, wasYoyo?, onEdge?) {
     const p = this._props
 
     // if we don't the _prevTime thus the direction we are heading to,
@@ -1037,7 +1028,7 @@ class Tween extends Module {
    * @param {number} time Current update time.
    * @param {boolean} isYoyo Is yoyo period. Used in Timeline to pass to Tween.
    */
-  _setProgress(proc, time, isYoyo) {
+  _setProgress(proc: number, time: number, isYoyo?: boolean) {
     const p = this._props
     const isYoyoChanged = p.wasYoyo !== isYoyo
     const isForward = time > this._prevTime
@@ -1077,7 +1068,7 @@ class Tween extends Module {
     @param {number} Progress to set.
     @param {boolean} Is yoyo period.
   */
-  _start(time, isYoyo) {
+  _start(time: number, isYoyo?: boolean) {
     if (this._isStarted) {
       return
     }
@@ -1144,7 +1135,7 @@ class Tween extends Module {
     @param {number} Current time.
     @param {boolean} Is yoyo period.
   */
-  _complete(time, isYoyo) {
+  _complete(time: number, isYoyo?: boolean) {
     if (this._isCompleted) {
       return
     }
@@ -1172,7 +1163,7 @@ class Tween extends Module {
     @param {number} Current update time.
     @param {boolean} Is yoyo period.
   */
-  _firstUpdate(time, isYoyo) {
+  _firstUpdate(time: number, isYoyo?: boolean) {
     if (this._isFirstUpdate) {
       return
     }
@@ -1195,7 +1186,7 @@ class Tween extends Module {
     @param {number} Current update time.
     @param {boolean} Is repeat period.
   */
-  _repeatComplete(time, isYoyo) {
+  _repeatComplete(time: number, isYoyo?: boolean) {
     if (this._isRepeatCompleted) {
       return
     }
@@ -1221,7 +1212,7 @@ class Tween extends Module {
     @param {number} Current update time.
     @param {boolean} Is yoyo period.
   */
-  _repeatStart(time, isYoyo) {
+  _repeatStart(time: number, isYoyo?: boolean) {
     if (this._isRepeatStart) {
       return
     }
@@ -1243,7 +1234,7 @@ class Tween extends Module {
    * @param {number} progress Progress to set.
    * @param {number} time
    */
-  _progress = (progress, time) => {
+  _progress = (progress: number, time: number) => {
     const p = this._props
     if (p.onProgress != null && typeof p.onProgress === 'function') {
       p.onProgress.call(
@@ -1293,7 +1284,7 @@ class Tween extends Module {
     @param {Object, String} Hash object of key/value pairs, or property name.
     @param {_} Property's value to set.
   */
-  _setProp(obj, value?) {
+  _setProp(obj, value?: any) {
     super._setProp(obj, value)
     this._calcDimensions()
   }
@@ -1305,7 +1296,7 @@ class Tween extends Module {
     @param {string} Name of the property.
     @param {Any} Value for the property.
   */
-  _assignProp(key, value) {
+  _assignProp(key: string, value: any) {
     // fallback to defaults
     if (value == null) {
       value = this._defaults[key]

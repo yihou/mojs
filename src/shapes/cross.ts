@@ -6,11 +6,13 @@
  */
 // ignore coffescript sudo code
 
+import {PossiblyNullOrUndefined} from '../types'
+
 import { default as Bit } from './bit'
 
 class Cross extends Bit {
-  _prevRadiusX
-  _prevRadiusY
+  _prevRadiusX: PossiblyNullOrUndefined<number>
+  _prevRadiusY: PossiblyNullOrUndefined<number>
   // shape: 'path'
 
   _declareDefaults() {
@@ -34,6 +36,10 @@ class Cross extends Bit {
     // skip if nothing changed
     if (isRadiusX && isRadiusY) {
       return
+    }
+
+    if (!this.el) {
+      throw new Error('"this.el" not defined.')
     }
 
     const x = this._props.width / 2

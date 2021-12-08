@@ -7,20 +7,22 @@
  */
 // ignore coffescript sudo code
 
+import {Point} from '../types'
+
 import { default as Bit } from './bit'
 
 class Zigzag extends Bit {
-  _prevRadiusX
-  _prevRadiusY
-  _prevPoints
-  _length
+  _prevRadiusX?: number
+  _prevRadiusY?: number
+  _prevPoints?: Point[]
+  _length?: number
 
   _declareDefaults() {
     // TODO: check if passing in arguments are required
     // super._declareDefaults(...arguments);
     super._declareDefaults()
     this._defaults.tag = 'path'
-    return (this._defaults.points = 3)
+    this._defaults.points = 3
   }
   // @_defaults.ratio = 1.43;
   _draw() {
@@ -30,6 +32,10 @@ class Zigzag extends Bit {
     const p = this._props
     if (!this._props.points) {
       return
+    }
+
+    if (!this.el) {
+      throw new Error('"this.el" is not defined.')
     }
 
     const radiusX =
@@ -80,7 +86,7 @@ class Zigzag extends Bit {
   }
 
   _getLength() {
-    return this._length
+    return this._length as number
   }
 }
 

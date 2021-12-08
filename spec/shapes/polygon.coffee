@@ -149,4 +149,4 @@ describe 'Polygon ->', ->
 
       sum += tri._pointsDelta points[0], mojs.h.getLastItem points
 
-      expect( tri._getPointsPerimiter( points ) ).toBe sum
+      expect( tri._getPointsPerimeter( points ) ).toBe sum
